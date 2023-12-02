@@ -1,18 +1,19 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 6CCS3PRJ Final Year Individual Project Report
-% luke.day@kcl.ac.uk
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \documentclass[11pt]{informatics-report}
-\usepackage{color}
-\usepackage[square,sort,comma,numbers]{natbib} %References
+\usepackage{biblatex}
+\addbibresource{report.bib}
+\nocite{*}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Front Matter - project title, name, supervisor name and date
+% Front Matter
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\title{6CCS3PRJ Final Year\\\vspace{0.2cm}Individual Project Report Title}
-\author{Your Name}
-\studentID{000000}
-\supervisor{Name}
+\title{
+    6CCS3PRJ Final Year \\
+    \vspace{0.2cm}
+    LLVM as a Target for Functional Language Compilation
+}
+\author{Talha Abdulkuddus}
+\studentID{20076327}
+\supervisor{Dr.\ Christian Urban}
 
 \date{\today}
 
@@ -28,13 +29,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Report Content
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% You can write each chapter directly here or in a separate .tex file and use the include command.
-
-\chapter{Introduction}
-This is one of the most important components of the report. It should begin with a clear statement of what the project is about so that the nature and scope of the project can be understood by a lay reader. It should summarise everything that you set out to achieve, provide a clear summary of the project's background and relevance to other work, and give pointers to the remaining sections of the report, which will contain the bulk of the technical material.
-
-\section{Report Structure}
-
+\include{Chapters/Introduction}
 \include{Chapters/Background}
 \include{Chapters/Body}
 \include{Chapters/DesignSpecification}
@@ -46,9 +41,7 @@ This is one of the most important components of the report. It should begin with
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % References
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\bibliographystyle{plain}
-\bibliography{references}
-\addcontentsline{toc}{section}{Bibliography}
+\printbibliography[heading=bibintoc]
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Appendices

@@ -16,6 +16,11 @@ RUN tlmgr install \
     latexmk chktex latexindent \
     # svg + deps
     svg koma-script trimspaces xcolor transparent pgf catchfile \
-    datetime2 datetime2-english \
-    glossaries \
+    csquotes datetime2 datetime2-english \
+    # glossaries
+    biblatex biber glossaries glossaries-extra glossaries-english \
+    # formatting
+    listings setspace \
+    # other
+    texcount microtype \
     && texhash
