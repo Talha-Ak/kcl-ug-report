@@ -18,9 +18,11 @@ RUN tlmgr install \
     svg koma-script trimspaces xcolor transparent pgf catchfile \
     csquotes datetime2 datetime2-english \
     # glossaries
-    biblatex biber glossaries glossaries-extra glossaries-english \
+    biblatex biber biblatex-ieee \
     # formatting
     listings setspace \
+    # standalone
+    standalone filehook svn-prov \
     # other
     texcount microtype \
     && texhash

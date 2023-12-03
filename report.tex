@@ -1,7 +1,10 @@
 \documentclass[11pt]{informatics-report}
-\usepackage{biblatex}
+\usepackage[bibstyle=ieee, citestyle=numeric-comp]{biblatex}
 \addbibresource{report.bib}
 \nocite{*}
+
+\usepackage[mode=buildnew]{standalone}
+\usepackage{microtype}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Front Matter
@@ -18,7 +21,7 @@
 \date{\today}
 
 \abstractFile{FrontMatter/abstract.tex}
-\ackFile{FrontMatter/acknowledgements.tex} %Remove line if you do not want acknowledgements
+% \ackFile{FrontMatter/acknowledgements.tex} %Remove line if you do not want acknowledgements
 
 \begin{document}
 \createFrontMatter
@@ -31,12 +34,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \include{Chapters/Introduction}
 \include{Chapters/Background}
-\include{Chapters/Body}
-\include{Chapters/DesignSpecification}
-\include{Chapters/Implementation}
-\include{Chapters/ProfessionalIssues}
-\include{Chapters/Evaluation}
-\include{Chapters/Conclusion}
+\include{Chapters/ReqSpecification}
+\include{Chapters/Design}
+% \include{Chapters/Implementation}
+% \include{Chapters/ProfessionalIssues}
+% \include{Chapters/Evaluation}
+% \include{Chapters/Conclusion}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % References
@@ -46,8 +49,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Appendices
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\appendix
-\include{Appendices/appendix}
-\include{Appendices/UserGuide}
-\include{Appendices/SourceCode}
+% \appendix
+% \include{Appendices/appendix}
+% \include{Appendices/UserGuide}
+% \include{Appendices/SourceCode}
 \end{document}

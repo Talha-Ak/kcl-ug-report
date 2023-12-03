@@ -1,4 +1,35 @@
 \chapter{Background}
-The background should set the project into context by motivating the subject matter and relating it to existing published work. The background will include a critical evaluation of the existing literature in the area in which your project work is based and should lead the reader to understand how your work is motivated by and related to existing work.
 
-\section{Section Heading}
+\section{The Compiler Pipeline}
+
+Compilers play the role of converting a program written in a given programming language into a
+corresponding program in a defined target language. While this conversion can theoretically be done
+in one step, it is common for compilers to employ multiple phases responsible for each major
+transformation of the source code. \autocite{grune2012modern}
+
+\begin{figure}
+    \centering
+    \includestandalone{Graphics/compiler-pipeline}
+    \caption{Simplified view of the phases of a compiler (adapted from \autocite{grune2012modern})}
+    \label{fig:compiler-pipeline}
+\end{figure}
+
+As seen in Figure~\ref{fig:compiler-pipeline}, these phases are split into a frontend responsible
+for converting the source language into some intermediate representation, and a backend responsible
+for converting the given intermediate representation into executable code for the target platform.
+This modular approach of dividing the compilation process into phases provides the ability to reuse
+certain phases when targeting different platforms, as well as to allow for semantically correct
+program optimisations within appropriate phases.
+
+For instance, the Glasgow Haskell Compiler (GHC) makes use of ten mandatory compiler phases.
+However, most phases are intentionally simple transformations, leaving the majority of the
+optimisations between the frontend and code generation \autocite{ghccompiler,
+    jones1997transformation}.
+
+\subsection{Lexical Analysis}
+
+\subsection{Syntax Analysis}
+
+\subsection{Semantic Analysis}
+
+\section{LLVM}

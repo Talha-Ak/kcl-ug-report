@@ -8,6 +8,6 @@
 *.tcp
 *.toc
 *.tps
-/report.synctex.gz
+*.synctex.gz
 
-report.pdf
+*.pdf
