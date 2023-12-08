@@ -3,8 +3,26 @@
 % luke.day@kcl.ac.uk
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \documentclass[11pt]{informatics-report}
-\usepackage{color}
-\usepackage[square,sort,comma,numbers]{natbib} %References
+\usepackage{xcolor}
+
+% Links
+\usepackage[pdfusetitle,hidelinks]{hyperref}
+\usepackage[all]{hypcap} % Fix caption ref links
+\hypersetup{
+    colorlinks,
+    linkcolor={red!50!black},
+    citecolor={blue!50!black},
+    urlcolor={blue!80!black}
+}
+
+% TODO: Dates are american
+% Citations/Glossary
+\usepackage[sorting=none]{biblatex}
+\addbibresource{report.bib}
+\nocite{*}
+
+% Better typography
+\usepackage{microtype}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Front Matter - project title, name, supervisor name and date
@@ -46,8 +64,7 @@ This is one of the most important components of the report. It should begin with
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % References
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\bibliographystyle{plain}
-\bibliography{references}
+\printbibliography
 \addcontentsline{toc}{section}{Bibliography}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
