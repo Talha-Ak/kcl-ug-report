@@ -23,6 +23,8 @@ RUN tlmgr install \
     listings setspace \
     # standalone
     standalone filehook svn-prov \
+    # minted
+    minted fancyvrb upquote \
     # other
     texcount microtype \
     && texhash

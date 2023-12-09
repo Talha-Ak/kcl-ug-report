@@ -10,4 +10,6 @@
 *.tps
 *.synctex.gz
 
+_minted-report
+
 *.pdf

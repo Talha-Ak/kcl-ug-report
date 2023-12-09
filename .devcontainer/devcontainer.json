@@ -26,7 +26,8 @@
                 "latex-workshop.latex.autoClean.run": "onBuilt",
                 "latex-workshop.latex.pdfWatch.delay": 500,
                 "editor.formatOnSave": true,
-                "editor.rulers": [ 100 ]
+                "editor.rulers": [ 100 ],
+                "ltex.language": "en-GB"
             }
         }
     }
