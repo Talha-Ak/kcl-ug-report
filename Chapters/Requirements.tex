@@ -1,0 +1,33 @@
+\chapter{Requirements}
+
+The aim of this project is to implement a compiler for a small functional language, targeting the
+LLVM IR. The language syntax is largely inspired by the language presented in the KCL module
+6CCS3CFL (which in turn was inspired by Scala), with additional features.
+
+The functional language should be able to express and support the following concepts:
+
+\begin{itemize}
+    \onehalfspacing
+    \item \textbf{Arithmetic} and \textbf{Boolean} expressions
+    \item \textbf{Variable Bindings}
+    \item \textbf{If} expressions
+    \item \textbf{Printing} to the console
+    \item \textbf{Functions} and \textbf{Function Application}
+    \item \textbf{Higher-Order Functions} (i.e. functions that take other functions as arguments)
+    \item Basic atomic \textbf{Types} (e.g. \mintinline{scala}{Int}, \mintinline{scala}{Bool},
+          \dots)
+    \item A basic form of \textbf{Pattern Matching} on \textbf{Algebraic Data Types}
+\end{itemize}
+
+The compiler should be able to take a program written in this language and produce the semantically
+equivalent LLVM IR. The conversion should be performed via the following steps:
+
+\begin{enumerate}
+    \onehalfspacing
+    \item Parsing the source program into an Abstract Syntax Tree (AST)
+    \item Transforming the AST into an appropriate intermediate representation (IR)
+    \item Applying relevant transformations (e.g.,\ closure conversion, hoisting, \dots) to
+          the IR
+    \item Converting the intermediate representation into LLVM IR
+\end{enumerate}
+

@@ -1,0 +1,22 @@
+\documentclass[tikz, mode=buildnew]{standalone}
+
+\begin{document}
+\begin{tikzpicture}[node distance=2cm, auto]
+    \tikzstyle{beginend} = [draw, rectangle, rounded corners=2mm, fill=blue!20, minimum width=2.5cm, minimum height=0.8cm, font=\small]
+    \tikzstyle{middle} = [draw, rectangle, rounded corners=2mm, fill=orange!20, minimum width=2.5cm, minimum height=0.8cm, font=\small]
+    \tikzstyle{output} = [draw, rectangle, rounded corners=2mm, fill=green!20, minimum width=2.5cm, minimum height=0.8cm, font=\small]
+
+    \node[beginend] (source) {Source file};
+    \node[middle, right of=source, below of=source] (parser) {Parser};
+    \node[middle, right of=parser, above of=parser] (irgen) {IRGen};
+    \node[middle, right of=irgen, below of=irgen] (closure) {ClosureConv};
+    \node[middle, right of=closure, above of=closure] (llvmgen) {LLVMGen};
+    \node[output, right of=llvmgen, below of=llvmgen] (output) {Output LLVM IR};
+
+    \draw[->] (source) -- (source -| parser) -- node[midway, above, font=\small, xshift=-0.9cm, yshift=-0.3cm] {Characters} (parser);
+    \draw[->] (parser) -- (parser -| irgen) -- node[midway, above, font=\small, xshift=-0.45cm, yshift=0.05cm] {AST} (irgen);
+    \draw[->] (irgen) -- (irgen -| closure) -- node[midway, above, font=\small, xshift=-0.3cm, yshift=-0.35cm] {IR} (closure);
+    \draw[->] (closure) -- (closure -| llvmgen) -- node[midway, above, font=\small, xshift=-0.7cm] {New IR} (llvmgen);
+    \draw[->] (llvmgen) -- (llvmgen -| output) -- node[midway, above, font=\small, xshift=0.8cm, yshift=-0.4cm] {LLVM IR} (output);
+\end{tikzpicture}
+\end{document}

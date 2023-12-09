@@ -1,3 +1,41 @@
-\chapter{Design}
+\chapter{Specification \& Design}
 
-\section{Section Heading}
+Mirroring the convention for modern compilers, the compiler will be implemented with distinct phases
+for each major transformation step outlined in the requirements. This is illustrated in
+Figure~\ref{fig:project-compiler-spec}.
+
+\begin{figure}
+    \centering
+    \includestandalone[width=\textwidth]{Graphics/project-compiler-spec}
+    \caption{A diagram of each phase of the proposed compiler.}
+    \label{fig:project-compiler-spec}
+\end{figure}
+
+\section{Technologies}
+
+The language selected for this compiler is \emph{Scala}, a JVM-based functional programming
+language. This choice of language was primarily motivated by the concise and expressive syntax Scala
+provides, such as operator overloading and extensive support for pattern matching. However, the
+choice of language is not a major factor in dictating the design of the compiler, as many of the
+implementation and design decisions could easily be ported to other languages.
+
+% ... will invoke llvm backend to generate executable
+% ... using mill build system
+% ... test library
+
+\section{Compiler Phases}
+
+\subsection{Parser}
+
+This phase is responsible for transforming the stream of characters from a source file into an AST.
+The implementation will be carried out using \emph{FastParse}, a parser combinator library for
+Scala. This decision was motivated by the library's parsing performance in comparison to other
+parser libraries, extensive tooling for debugging and testing, in addition to its judicious use of
+Scala's language features. This results in a syntax for defining parsers that is modular and simple
+to reason about.
+
+\subsection{IRGen}
+
+\subsection{ClosureConv}
+
+\subsection{LLVMGen}

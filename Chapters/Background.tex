@@ -1,16 +1,27 @@
 \chapter{Background}
 
+\section{Functional Languages}
+
+Functional languages are a class of programming languages that stem from lambda calculus, treating
+computation as the evaluation of functions, avoiding persistent or mutable state. To facilitate
+this, modern functional languages typically provide a number of features, such as higher-order
+functions, pattern matching, and algebraic data types \autocite{hudak1989conception}. Typical
+imperative constructs such as loops and mutable variables are also discouraged, instead favouring
+recursion and immutable data structures. These characteristics make compilers for functional
+languages an interesting case study, as they must be able to transform and optimise programs written
+in a paradigm that is inherently different from that of the target platform.
+
 \section{The Compiler Pipeline}
 
 Compilers play the role of converting a program written in a given programming language into a
 corresponding program in a defined target language. While this conversion can theoretically be done
 in one step, it is common for compilers to employ multiple phases responsible for each major
-transformation of the source code. \autocite{grune2012modern}
+transformation of the source code \autocite{grune2012modern}.
 
 \begin{figure}
     \centering
-    \includestandalone{Graphics/compiler-pipeline}
-    \caption{Simplified view of the phases of a compiler (adapted from \autocite{grune2012modern})}
+    \includestandalone[width=\textwidth]{Graphics/compiler-pipeline}
+    \caption{Simplified view of the phases of a compiler (adapted from \autocite{grune2012modern}).}
     \label{fig:compiler-pipeline}
 \end{figure}
 
@@ -21,15 +32,163 @@ This modular approach of dividing the compilation process into phases provides t
 certain phases when targeting different platforms, as well as to allow for semantically correct
 program optimisations within appropriate phases.
 
-For instance, the Glasgow Haskell Compiler (GHC) makes use of ten mandatory compiler phases.
-However, most phases are intentionally simple transformations, leaving the majority of the
-optimisations between the frontend and code generation \autocite{ghccompiler,
-    jones1997transformation}.
+As an example, the Glasgow Haskell Compiler (GHC) makes use of ten mandatory compiler phases
+\autocite{ghccompiler}. However, most phases within the GHC are intentionally simple
+transformations, leaving the majority of the optimisations to a specific single phase between the
+frontend and code generation \autocite{jones1997transformation}.
 
 \subsection{Lexical Analysis}
 
+During the lexical analysis phase, the source input is converted into a stream of tokens by
+identifying meaningful character sequences that can be grouped together. These character sequences,
+known as \emph{lexemes}, are associated with a token type indicating whether it is an operator,
+identifier, keyword or another feature of the source language. This phase is also responsible for
+filtering characters inconsequential to the semantics of a program, such as whitespace and comments.
+
+For instance, the following:
+
+\begin{minted}{scala}
+// A simple multiplication
+val x = 4 * 2
+\end{minted}
+
+\noindent could be converted into the following stream of tokens:
+
+\begin{minted}{scala}
+KEYWORD(val) IDENTIFIER(x) EQUALS INTEGER(4) OPERATOR(*) INTEGER(2)
+\end{minted}
+
+\noindent where \mintinline{scala}{KEYWORD} represents a keyword token,
+\mintinline{scala}{EQUALS} represents an equals token, and so on.
+
+A natural mechanism for identifying tokens from a stream of characters is to use regular expressions
+\autocite{aho2007compilers}. For instance, the regular expression \mintinline{text}{[a-zA-Z]+}
+could be used to identify identifiers, while \mintinline{text}{[0-9]+} could be used to identify
+integers.
+
 \subsection{Syntax Analysis}
 
-\subsection{Semantic Analysis}
+The syntax analysis phase, also known as the parsing phase, is responsible for converting the stream
+of tokens produced by the lexical analysis phase into a parse tree. This tree represents the
+syntactic structure of the lexed tokens, which are derived from a context-free grammar (CFG).
+The parse tree is then converted into an abstract syntax tree (AST) by removing nodes that do not
+contribute to the semantics of the program, such as those representing parentheses.
 
-\section{LLVM}
+While there are a plethora of algorithms and techniques for parsing, the most common method used for
+parsing contemporary programming languages as surveyed in 2021 is via a handwritten \emph{recursive
+    descent parser} \autocite{eaton2021parser}. This parsing method is based on the idea of a top-down
+parser, where the parser starts at the root of the syntax tree and recursively works its way down in
+a depth-first, pre-order manner to the leaves of the tree.
+
+Another top-down parsing method are \emph{parser combinators}, which are a form of higher-order
+functions that can be used to construct and combine parsers. These combinators provide greater
+modularity than recursive descent parsers, as well as the ability to construct parsers that are more
+expressive than those that can be constructed by recursive descent.
+
+% The above example could be represented by the following parse tree:
+
+% \begin{figure}[H]
+% \centering
+% \includestandalone[width=0.5\textwidth]{Graphics/parse-tree}
+% \caption{Parse tree for the example code.}
+% \label{fig:parse-tree}
+
+\section{LLVM IR}
+
+The LLVM project is an open-source collection of tools and libraries for the construction of
+compilers and related programming tools, the core of which revolves around the LLVM intermediate
+representation (LLVM IR). This IR is low-level enough to be used as a target for compilers from
+which an LLVM backend can generate machine code, while also being high-level enough to be used as a
+portable assembly language targeting a variety of architectures.
+
+From its inception, the IR was defined to be represented in Static Single Assignment (SSA) form
+\autocite{lattner2004llvm}, restricting the IR such that each variable must be assigned to exactly
+once before usage, and cannot be reassigned. This restriction alone would imply that purely
+functional languages could be represented in SSA form, as these languages enforce immutability.
+However, the SSA used in LLVM IR also enforces that expressions be atomic, akin to assembly
+instructions. The effect of this is that the program flow is made explicit, simplifying
+optimisations such as dead code elimination and constant propagation.
+
+For instance, the following Scala code:
+
+\begin{minted}{scala}
+def foo(x: Int, y: Int): Int = (x + y) * x
+\end{minted}
+
+\noindent could be converted into the following LLVM IR:
+
+\begin{minted}{llvm}
+define i32 @foo(i32 %x, i32 %y) {
+    %add = add i32 %x, %y
+    %mul = mul i32 %add, %x
+  ret i32 %mul
+}
+\end{minted}
+
+\section{SSA Conversion Methods}
+
+As the LLVM IR is specified to be in SSA form, compilers targeting the LLVM IR must convert their
+programs into SSA form before generating LLVM IR. For functional languages, it is useful to convert
+to another intermediate representation that is close to SSA form before converting to LLVM IR.
+
+The following intermediate representations will be considered for this report:
+\begin{itemize}
+    \onehalfspacing
+    \item \textbf{Continuation-Passing Style}
+    \item \textbf{A-Normal Form} (ANF)
+\end{itemize}
+
+These specific representations were chosen as they both have been demonstrated to convert from the
+lambda calculus into these forms \autocite{morrisett1999systemf,flanagan1993essence}, making them
+ideal for representing functional languages.
+
+\subsection{Continuation-Passing Style}
+
+Continuation-Passing Style (CPS) refers to a programming style where, instead of function
+invocations returning a value, functions instead invoke a continuation function with the value as
+an argument.
+
+% Continuation-Passing Style (CPS) is a style of programming where the evaluation of a function is
+% represented as a function that takes a continuation as an argument \autocite{danvy1992intensions}.
+% This style of programming is useful for compilers, as it allows for the representation of
+% expressions in a way that is similar to the way that the stack is used during execution. This is
+% because the continuation represents the rest of the computation that needs to be performed after
+% the current expression is evaluated.
+
+For instance, the following code:
+
+\begin{minted}{scala}
+def foo(x: Int, y: Int): Int = (x + y) * x
+\end{minted}
+
+\noindent could be converted into the following CPS:
+
+\begin{minted}{scala}
+def foo(x: Int, y: Int, k: Int => Int): Int = {
+    val z = x + y
+    k(z * x)
+}
+\end{minted}
+
+\noindent where \mintinline{scala}{k} represents the continuation.
+
+\subsection{A-Normal Form}
+
+Administrative Normal Form (ANF) refers to a programming style where all expressions are either
+variables or function calls with atomic arguments.
+
+For instance, the following code:
+
+\begin{minted}{scala}
+def foo(x: Int, y: Int): Int = (x + y) * x
+\end{minted}
+
+\noindent could be converted into the following ANF code:
+
+\begin{minted}{scala}
+def foo(x: Int, y: Int): Int = {
+    val z = x + y
+    val w = z * x
+    w
+}
+\end{minted}
