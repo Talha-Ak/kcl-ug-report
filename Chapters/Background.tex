@@ -1,15 +1,5 @@
 \chapter{Background}
-
-\section{Functional Languages}
-
-Functional languages are a class of programming languages that stem from lambda calculus, treating
-computation as the evaluation of functions, avoiding persistent or mutable state. To facilitate
-this, modern functional languages typically provide a number of features, such as higher-order
-functions, pattern matching, and algebraic data types \autocite{hudak1989conception}. Typical
-imperative constructs such as loops and mutable variables are also discouraged, instead favouring
-recursion and immutable data structures. These characteristics make compilers for functional
-languages an interesting case study, as they must be able to transform and optimise programs written
-in a paradigm that is inherently different from that of the target platform.
+\label{sec:background}
 
 \section{The Compiler Pipeline}
 
@@ -115,7 +105,7 @@ For instance, the following Scala code:
 def foo(x: Int, y: Int): Int = (x + y) * x
 \end{minted}
 
-\noindent could be converted into the following LLVM IR:
+could be converted into the following LLVM IR:
 
 \begin{minted}{llvm}
 define i32 @foo(i32 %x, i32 %y) {
@@ -135,14 +125,15 @@ The following intermediate representations will be considered for this report:
 \begin{itemize}
     \onehalfspacing
     \item \textbf{Continuation-Passing Style}
-    \item \textbf{A-Normal Form} (ANF)
+    \item \textbf{A-Normal Form}
 \end{itemize}
 
-These specific representations were chosen as they both have been demonstrated to convert from the
-lambda calculus into these forms \autocite{morrisett1999systemf,flanagan1993essence}, making them
-ideal for representing functional languages.
+These specific representations were chosen as they both have been demonstrated to map closely to
+lambda calculus \autocite{morrisett1999systemf,flanagan1993essence}, making them ideal for
+representing functional languages.
 
 \subsection{Continuation-Passing Style}
+\label{sec:cps}
 
 Continuation-Passing Style (CPS) refers to a programming style where, instead of function
 invocations returning a value, functions instead invoke a continuation function with the value as
@@ -155,40 +146,38 @@ an argument.
 % because the continuation represents the rest of the computation that needs to be performed after
 % the current expression is evaluated.
 
-For instance, the following code:
+For instance, the following Scala expression:
 
 \begin{minted}{scala}
-def foo(x: Int, y: Int): Int = (x + y) * x
+foo(1, 2) + bar(3, 4)
 \end{minted}
 
-\noindent could be converted into the following CPS:
+could be converted into the following CPS:
 
 \begin{minted}{scala}
-def foo(x: Int, y: Int, k: Int => Int): Int = {
-    val z = x + y
-    k(z * x)
-}
+// foo and bar accept and return additional continuation function arg
+foo(1, 2,
+    (a) => bar(3, 4,
+        (b) => a + b
+    )
+)
 \end{minted}
 
-\noindent where \mintinline{scala}{k} represents the continuation.
+where \mintinline{scala}{k} represents the continuation.
+
+While not identical to SSA, it has been proven that a subset of CPS is equivalent to SSA, and this
+subset is sufficient for use as an intermediate representation \autocite{kelsey1993correspondence}.
 
 \subsection{A-Normal Form}
 
-Administrative Normal Form (ANF) refers to a programming style where all expressions are either
-variables or function calls with atomic arguments.
+A simpler, more compact IR is Administrative Normal Form (ANF), referring to a programming style
+where all expressions are either variables or function calls with atomic arguments.
 
-For instance, the following code:
+For instance, the same Scala code from Section~\ref{sec:cps} could be converted into the following
+ANF code:
 
-\begin{minted}{scala}
-def foo(x: Int, y: Int): Int = (x + y) * x
-\end{minted}
-
-\noindent could be converted into the following ANF code:
-
-\begin{minted}{scala}
-def foo(x: Int, y: Int): Int = {
-    val z = x + y
-    val w = z * x
-    w
-}
+\begin{minted}{Scala}
+val a = foo(1, 2)
+val b = bar(3, 4)
+a + b
 \end{minted}

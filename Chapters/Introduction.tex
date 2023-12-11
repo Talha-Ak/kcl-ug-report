@@ -1,8 +1,41 @@
 \chapter{Introduction}
-This is one of the most important components of the report. It should begin with a clear statement
-of what the project is about so that the nature and scope of the project can be understood by a lay
-reader. It should summarise everything that you set out to achieve, provide a clear summary of the
-project's background and relevance to other work, and give pointers to the remaining sections of the
-report, which will contain the bulk of the technical material.
+
+Functional languages are a class of programming languages that stem from the lambda calculus,
+treating computation as the evaluation of functions, avoiding side effects and mutable state.
+Benefits of this paradigm include the ability to apply formal mathematical reasoning about programs,
+simpler parallelisation of programs, while encouraging modularity and code reuse.
+
+Advantages of this paradigm have even led to the adoption of some functional language features in
+other popular languages, such as Java, C\#, and Rust. To facilitate programming in this paradigm,
+modern functional languages typically provide a number of features, such as higher-order functions,
+pattern matching, and algebraic data types \autocite{hudak1989conception}. Typical imperative
+constructs such as loops and mutable variables are also discouraged, instead favouring recursion and
+immutable data structures. These characteristics make compilers for functional languages an
+interesting case study, as more work is offloaded to the compiler for transforming programs into
+efficient machine code---code that is in a different paradigm to that of a functional language.
+
+One method of compiling functional languages is via the LLVM toolchain, which provides a collection
+of utilities for compiling, optimising, and linking programs. For language designers, one can create
+a frontend that compiles a language into LLVM IR, which can then be compiled into machine code for a
+variety of architectures by leveraging the LLVM backend. This approach can be preferable in
+comparison to:
+
+\begin{itemize}
+    \item \textbf{Compiling to native machine code:} This approach requires a separate backend for
+          each architecture, and can be difficult to implement for more complex architectures.
+    \item \textbf{Compiling to a virtual machine (VM):} This approach requires the overhead of a VM
+          runtime to be installed on the target machine, typically optimised for imperative
+          languages.
+\end{itemize}
+
+This project aims to implement a compiler for a small functional language, targeting the LLVM
+Intermediate Representation (IR). This language (inspired by the language presented in the KCL
+module 6CCS3CFL) will support a number of features, including higher order functions and pattern
+matching.
 
 \section{Report Structure}
+
+Contemporary compiler design will be explored within Chapter~\ref{sec:background}, with a focus on
+translation between functional languages and the LLVM IR. The full scope of the compiler and
+language will be defined in Chapter~\ref{sec:requirements}, with the design of the compiler
+presented in Chapter~\ref{sec:design}.
