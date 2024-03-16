@@ -6,7 +6,8 @@
             "extensions": [
                 "james-yu.latex-workshop",
                 "shardulm94.trailing-spaces",
-                "valentjn.vscode-ltex"
+                "valentjn.vscode-ltex",
+                "stkb.rewrap"
             ],
             "settings": {
                 "latex-workshop.linting.chktex.enabled": true,

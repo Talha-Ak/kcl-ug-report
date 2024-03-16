@@ -25,6 +25,8 @@ RUN tlmgr install \
     standalone filehook svn-prov \
     # minted
     minted fancyvrb upquote \
+    # BNF syntax
+    mdwtools \
     # other
     texcount microtype \
     && texhash

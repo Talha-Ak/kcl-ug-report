@@ -6,10 +6,13 @@
 \ProvidesClass{informatics-report}[2012/10/07 Informatics Final Year Project Report Class]
 
 \usepackage[british]{babel}
+\usepackage[useregional]{datetime2}
+\DTMlangsetup[en-GB]{ord=raise}
 \usepackage{graphicx}
 \usepackage[left=1.4in, right=1.4in, top=0.8in, bottom=1.0in]{geometry}
 \usepackage{layout}
 \usepackage{xcolor}
+\usepackage{setspace}
 \usepackage[pdfusetitle,hidelinks]{hyperref}
 \usepackage[all]{hypcap} % Fix caption ref links
 \hypersetup{
@@ -28,7 +31,6 @@
 \setcounter{tocdepth}{1} %Table of Contents depth, section only
 
 %Text
-\usepackage{setspace}
 %\onehalfspacing
 \doublespacing
 

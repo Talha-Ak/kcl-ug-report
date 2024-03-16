@@ -5,12 +5,19 @@
 
 \usepackage[mode=buildnew]{standalone}
 \usepackage{minted}
-\setminted{frame=leftline}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\setminted{autogobble,breaklines,bgcolor=bg,frame=leftline}
+\usepackage{syntax}
+\usepackage{multicol}
+\grammarindent1in
 \usepackage{etoolbox}
-\BeforeBeginEnvironment{minted}{\begin{singlespacing}}
-\AfterEndEnvironment{minted}{\end{singlespacing}}
+\BeforeBeginEnvironment{minted}{\singlespacing}
+\AfterEndEnvironment{minted}{\doublespacing}
+\BeforeBeginEnvironment{grammar}{\singlespacing}
+\AfterEndEnvironment{grammar}{\doublespacing}
 \usepackage{microtype}
 \usepackage{tikz}
+\usetikzlibrary{positioning}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Front Matter
@@ -18,7 +25,7 @@
 \title{
     6CCS3PRJ Final Year \\
     \vspace{0.2cm}
-    LLVM as a Target for Functional Language Compilation
+    LLVM IR as a Target for Functional Language Compilation
 }
 \author{Talha Abdulkuddus}
 \studentID{20076327}
@@ -27,7 +34,7 @@
 \date{\today}
 
 \abstractFile{FrontMatter/abstract.tex}
-% \ackFile{FrontMatter/acknowledgements.tex} %Remove line if you do not want acknowledgements
+\ackFile{FrontMatter/acknowledgements.tex} %Remove line if you do not want acknowledgements
 
 \begin{document}
 \createFrontMatter
@@ -42,10 +49,10 @@
 \include{Chapters/Background}
 \include{Chapters/Requirements}
 \include{Chapters/Design}
-% \include{Chapters/Implementation}
-% \include{Chapters/ProfessionalIssues}
-% \include{Chapters/Evaluation}
-% \include{Chapters/Conclusion}
+\include{Chapters/Implementation}
+\include{Chapters/ProfessionalIssues}
+\include{Chapters/Evaluation}
+\include{Chapters/Conclusion}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % References
@@ -55,8 +62,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Appendices
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% \appendix
+\appendix
 % \include{Appendices/appendix}
+\include{Appendices/Grammar}
 % \include{Appendices/UserGuide}
 % \include{Appendices/SourceCode}
 \end{document}
