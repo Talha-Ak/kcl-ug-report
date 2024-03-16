@@ -39,13 +39,14 @@ parser libraries, extensive tooling for debugging and testing, in addition to it
 Scala's language features. This results in a syntax for defining parsers that is modular and simple
 to reason about.
 
-The trade-off when using FastParse is that it operates directly with the stream of characters,
+The trade-off when using \emph{FastParse} is that it operates directly with the stream of characters,
 rather than a stream of tokens (known as \emph{scannerless parsing}). This means that the lexical
 analysis phase will be omitted, with the parser responsible for identifying tokens.
 
 The context-free grammar used by the parser must be unambiguous, and
 (particularly for arithmetic and boolean expressions) correctly reflect the precedence and
-associativity of operators.
+associativity of operators. While technically possible for parser combinators to handle
+these grammars \autocite{frost2008recursiveparsers}, the \emph{FastParse} library does not.
 
 
 (Language BNF to be included here (or in appendix? implementation?))
@@ -91,4 +92,3 @@ This final phase is responsible for traversing the ANF IR and generating the cor
 Any additional runtime functions required for supporting the language features are also generated
 within this phase, such as functions to \texttt{print()}. It is imperative that the type information
 from the source language is preserved up to this point, as the LLVM IR is strongly typed.
-

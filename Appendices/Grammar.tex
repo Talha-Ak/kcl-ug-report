@@ -1,0 +1,117 @@
+\chapter{Language Specification}
+\label{app:grammar}
+
+The syntax is based on the syntax of the Scala language, with major
+simplifications (e.g.\ the lack of classes, objects, and inheritance) for the purposes of focusing
+on the compilation of functional language features.
+
+The following specifies the syntax of the language created in this project, presented in Extended
+Backus-Naur Form (EBNF). For clarity, the following conventions for the EBNF grammar will be used:
+\begin{itemize}
+    \singlespacing
+    \item \synt{...} denotes a non-terminal symbol.
+    \item \lit{...} denotes a terminal symbol.
+    \item \syntax{(...)} denotes a grouping of symbols.
+    \item \syntax{\synt{...} | \synt{...}} denotes a choice between two or more alternatives.
+    \item \syntax{\{ \synt{...} \}} denotes zero or more repetitions of the enclosed
+          expression.
+    \item \syntax{[ \synt{...} ]} denotes an optional (zero or one repetition)
+          expression.
+\end{itemize}
+
+\section{Lexical Syntax}
+
+\begin{grammar}
+
+    <identifier> ::= <letter> \{ <letter> | <digit> | `_' \}
+
+    <letter> ::= `A' | ... | `z'
+
+    <digit> ::= `0' | ... | `9'
+
+    <number> ::= <digit> \{ <digit> \}
+
+    <float> ::= <number> `.' <number>
+
+    <bool> ::= `true' | `false'
+
+
+\end{grammar}
+
+\section{Keywords}
+
+The following names are reserved words, rather than identifiers.
+
+\begin{multicols}{4}
+    \singlespacing
+    \begin{itemize}
+        \item \lit{def}
+        \item \lit{val}
+        \item \lit{enum}
+        \item \lit{struct}
+        \item \lit{if}
+        \item \lit{then}
+        \item \lit{else}
+        \item \lit{write}
+        \item \lit{true}
+        \item \lit{false}
+    \end{itemize}
+\end{multicols}
+
+\section{Grammar}
+
+\begin{grammar}
+
+    <program> ::= `def main () =' <expr>
+    \alt <def fn> <program>
+    \alt <defenum> <program>
+    \alt <defstruct> <program>
+
+    <def fn> ::= `def' <identifier> `(' \{ <typed ident> `,' \} `) :' <type>  `=' <expr> `;'
+
+    <def enum> ::= `enum' <identifier>  `=' <identifier> \{ `|' <identifier> \} `;'
+
+    <def struct> ::= `struct' <identifier> `= {' <typed ident> \{ `,' <typed ident> \} `};'
+
+    <def val> ::= `val' <typed ident> `=' <expr> `;'
+
+    <typed ident> ::= <identifier> `:' <type>
+
+    <type> ::= `int'
+    \alt `bool'
+    \alt `void'
+    \alt `float'
+    \alt `(' \{ <type> `,' \} `) =>' <type>
+    \alt <identifier>
+
+    <expr> ::= `if' <equal> `then' <expr> `else' <expr>
+    \alt `print (' <equal> `)'
+    \alt <match>
+    \alt <block>
+    \alt <equal>
+
+    <match> ::= <identifier> `match {' <case> \{ <case> \} `}'
+
+    <case> ::= `case' <identifier>`::'<identifier> `=>' <expr>
+    \alt `case _ =>' <expr>
+
+    <block> ::= `{' \{ <def fn> | <def val> \} <expr> \{ `;' <expr> \} `}'
+
+    <equal> ::= <comp> \{ (`==' | `!=') <comp> \}
+
+    <comp> : <term> \{ (`<' | `>' | `>=' | `<=') <term> \}
+
+    <term> ::= <fact> \{ (`+' | `-') <fact> \}
+
+    <fact> ::= <primary> \{ (`*' | `/' | `\%') <primary> \}
+
+    <primary> ::= <identifier> `(' \{ <expr> `,' \} `)'
+    \alt `(' <expr> `)'
+    \alt <identifier>`::'<identifier>
+    \alt <identifier>`.'<identifier>
+    \alt <number>
+    \alt <float>
+    \alt <bool>
+    \alt <identifier>
+
+\end{grammar}

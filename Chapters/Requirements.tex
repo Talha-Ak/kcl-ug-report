@@ -11,26 +11,34 @@ examples):
 \begin{itemize}
       \item \textbf{Arithmetic} and \textbf{Boolean} expressions \\
             (Operator precedence and associativity must be respected.)
-            \mint{scala}|1 + 2 * 3 < 4 && 5 >= 6|
+            \begin{minted}{scala}
+                  1 + 2 * 3 < 4 && 5 >= 6
+            \end{minted}
 
       \item \textbf{Variable Bindings}
-            \mint{scala}|val x = 1; val y = 2; val z = x + y|
+            \begin{minted}{scala}
+                  val x = 1; val y = 2; val z = x + y
+            \end{minted}
 
       \item \textbf{If} expressions with optional else clauses \\
             (Care must be taken to avoid the dangling else problem.)
-            \mint{scala}|if (x < 0) 0 else x|
+            \begin{minted}{scala}
+                  if (x < 0) 0 else x
+            \end{minted}
 
       \item \textbf{Printing} to the console
-            \mint{scala}|printStr("Hello, World!")|
+            \begin{minted}{scala}
+                  printStr("Hello, World!")
+            \end{minted}
 
       \item \textbf{Functions} and \textbf{Function Application}
-            \begin{minted}[autogobble]{scala}
+            \begin{minted}{scala}
                   def foo(x: Int, y: Int): Int = x + y;
                   foo(1, 2)
             \end{minted}
 
       \item \textbf{Higher-Order Functions} (i.e. functions that take other functions as arguments)
-            \begin{minted}[autogobble]{scala}
+            \begin{minted}{scala}
             def foo(f: Int => Int, x: Int): Int = f(x);
             def bar(x: Int): Int = x + 1;
             foo(bar, 1)
@@ -42,7 +50,7 @@ examples):
 
       \item A basic form of \textbf{Pattern Matching} on \textbf{Enumerated Types}
             (May be extended to work on Abstract Data Types if time permits)
-            \begin{minted}[autogobble]{scala}
+            \begin{minted}{scala}
                   enum Priority {
                         case Low
                         case Medium

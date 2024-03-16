@@ -52,8 +52,8 @@ KEYWORD(val) IDENTIFIER(x) EQUALS INTEGER(4) OPERATOR(*) INTEGER(2)
 \mintinline{scala}{EQUALS} represents an equals token, and so on.
 
 A natural mechanism for identifying tokens from a stream of characters is to use regular expressions
-\autocite{aho2007compilers}. For instance, the regular expression \mintinline{text}{[a-zA-Z]+}
-could be used to identify identifiers, while \mintinline{text}{[0-9]+} could be used to identify
+\autocite{aho2007compilers}. For instance, the regular expression \texttt{[a-zA-Z]+}
+could be used to identify identifiers, while \texttt{[0-9]+} could be used to identify
 integers.
 
 \subsection{Syntax Analysis}
@@ -102,17 +102,17 @@ optimisations such as dead code elimination and constant propagation.
 For instance, the following Scala code:
 
 \begin{minted}{scala}
-def foo(x: Int, y: Int): Int = (x + y) * x
+    def foo(x: Int, y: Int): Int = (x + y) * x
 \end{minted}
 
 could be converted into the following LLVM IR:
 
 \begin{minted}{llvm}
-define i32 @foo(i32 %x, i32 %y) {
-    %add = add i32 %x, %y
-    %mul = mul i32 %add, %x
-  ret i32 %mul
-}
+    define i32 @foo(i32 %x, i32 %y) {
+        %add = add i32 %x, %y
+        %mul = mul i32 %add, %x
+        ret i32 %mul
+    }
 \end{minted}
 
 \section{SSA Conversion Methods}
@@ -149,21 +149,21 @@ an argument.
 For instance, the following Scala expression:
 
 \begin{minted}{scala}
-foo(1, 2) + bar(3, 4)
+    foo(1, 2) + bar(3, 4)
 \end{minted}
 
-could be converted into the following CPS:
+\noindent could be converted into the following CPS:
 
 \begin{minted}{scala}
-// foo and bar accept and return additional continuation function arg
-foo(1, 2,
-    (a) => bar(3, 4,
-        (b) => a + b
+    // foo and bar accept and return additional continuation function arg
+    foo(1, 2,
+        (a) => bar(3, 4,
+            (b) => a + b
+        )
     )
-)
 \end{minted}
 
-where \mintinline{scala}{k} represents the continuation.
+\noindent where \texttt{k} represents the continuation.
 
 While not identical to SSA, it has been proven that a subset of CPS is equivalent to SSA, and this
 subset is sufficient for use as an intermediate representation \autocite{kelsey1993correspondence}.
@@ -177,7 +177,7 @@ For instance, the same Scala code from Section~\ref{sec:cps} could be converted 
 ANF code:
 
 \begin{minted}{Scala}
-val a = foo(1, 2)
-val b = bar(3, 4)
-a + b
+    val a = foo(1, 2)
+    val b = bar(3, 4)
+    a + b
 \end{minted}
