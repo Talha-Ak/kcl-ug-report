@@ -10,7 +10,7 @@
                 "stkb.rewrap"
             ],
             "settings": {
-                "latex-workshop.linting.chktex.enabled": true,
+                "latex-workshop.linting.chktex.enabled": false,
                 "latex-workshop.linting.chktex.exec.path": "chktex",
                 "latex-workshop.synctex.afterBuild.enabled": true,
                 "latex-workshop.view.pdf.viewer": "tab",
@@ -26,7 +26,6 @@
                 ],
                 "latex-workshop.latex.autoClean.run": "onBuilt",
                 "latex-workshop.latex.pdfWatch.delay": 500,
-                "editor.formatOnSave": true,
                 "editor.rulers": [ 100 ],
                 "ltex.language": "en-GB"
             }

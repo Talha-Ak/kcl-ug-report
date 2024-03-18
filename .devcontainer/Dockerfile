@@ -1,5 +1,6 @@
-FROM registry.gitlab.com/islandoftex/images/texlive:latest-basic
-ARG TEXLIVE_VERSION=2023
+FROM texlive/texlive:latest-basic
+ARG TEXLIVE_VERSION=2024
+
 
 RUN apt-get update && apt-get install -y \
     # sharing ssh credentials
@@ -21,6 +22,8 @@ RUN tlmgr install \
     biblatex biber biblatex-ieee \
     # formatting
     listings setspace \
+    # tcolorbox
+    tcolorbox environ \
     # standalone
     standalone filehook svn-prov \
     # minted
