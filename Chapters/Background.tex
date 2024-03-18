@@ -37,16 +37,16 @@ filtering characters inconsequential to the semantics of a program, such as whit
 
 For instance, the following:
 
-\begin{minted}{scala}
-// A simple multiplication
-val x = 4 * 2
-\end{minted}
+\begin{code}{scala}
+    // A simple multiplication
+    val x = 4 * 2
+\end{code}
 
 \noindent could be converted into the following stream of tokens:
 
-\begin{minted}{scala}
-KEYWORD(val) IDENTIFIER(x) EQUALS INTEGER(4) OPERATOR(*) INTEGER(2)
-\end{minted}
+\begin{code}{scala}
+    KEYWORD(val) IDENTIFIER(x) EQUALS INTEGER(4) OPERATOR(*) INTEGER(2)
+\end{code}
 
 \noindent where \mintinline{scala}{KEYWORD} represents a keyword token,
 \mintinline{scala}{EQUALS} represents an equals token, and so on.
@@ -101,19 +101,19 @@ optimisations such as dead code elimination and constant propagation.
 
 For instance, the following Scala code:
 
-\begin{minted}{scala}
+\begin{code}{scala}
     def foo(x: Int, y: Int): Int = (x + y) * x
-\end{minted}
+\end{code}
 
 could be converted into the following LLVM IR:
 
-\begin{minted}{llvm}
+\begin{code}{llvm}
     define i32 @foo(i32 %x, i32 %y) {
         %add = add i32 %x, %y
         %mul = mul i32 %add, %x
         ret i32 %mul
     }
-\end{minted}
+\end{code}
 
 \section{SSA Conversion Methods}
 
@@ -148,20 +148,20 @@ an argument.
 
 For instance, the following Scala expression:
 
-\begin{minted}{scala}
+\begin{code}{scala}
     foo(1, 2) + bar(3, 4)
-\end{minted}
+\end{code}
 
 \noindent could be converted into the following CPS:
 
-\begin{minted}{scala}
+\begin{code}{scala}
     // foo and bar accept and return additional continuation function arg
     foo(1, 2,
         (a) => bar(3, 4,
             (b) => a + b
         )
     )
-\end{minted}
+\end{code}
 
 \noindent where \texttt{k} represents the continuation.
 
@@ -176,8 +176,8 @@ where all expressions are either variables or function calls with atomic argumen
 For instance, the same Scala code from Section~\ref{sec:cps} could be converted into the following
 ANF code:
 
-\begin{minted}{Scala}
+\begin{code}{Scala}
     val a = foo(1, 2)
     val b = bar(3, 4)
     a + b
-\end{minted}
+\end{code}

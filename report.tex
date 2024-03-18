@@ -5,19 +5,29 @@
 
 \usepackage[mode=buildnew]{standalone}
 \usepackage{minted}
-\definecolor{bg}{rgb}{0.95,0.95,0.95}
-\setminted{autogobble,breaklines,bgcolor=bg,frame=leftline}
+\setminted{autogobble,breaklines,baselinestretch=1}
 \usepackage{syntax}
 \usepackage{multicol}
 \grammarindent1in
 \usepackage{etoolbox}
-\BeforeBeginEnvironment{minted}{\singlespacing}
-\AfterEndEnvironment{minted}{\doublespacing}
 \BeforeBeginEnvironment{grammar}{\singlespacing}
 \AfterEndEnvironment{grammar}{\doublespacing}
 \usepackage{microtype}
 \usepackage{tikz}
-\usetikzlibrary{positioning}
+\usetikzlibrary{positioning,arrows.meta}
+\usepackage{tcolorbox}
+\tcbuselibrary{minted}
+\newtcblisting{code}[1]{
+    listing only,
+    minted language=#1
+}
+
+% \newenvironment{codesbs}{
+%     \begin{tcolorbox}[sidebyside,title={test}]
+% }
+% {
+%     \end{tcolorbox}
+% }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Front Matter

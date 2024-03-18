@@ -9,7 +9,7 @@ Scala case classes.
 
 A condensed example can be seen as follows:
 
-\begin{minted}{scala}
+\begin{code}{scala}
     sealed trait Exp
     case class Call(name: String, args: Seq[Exp]) extends Exp
     case class Num(i: Int) extends Exp
@@ -34,49 +34,68 @@ A condensed example can be seen as follows:
         BoolParser.map(Bool) |
         IdParser.map(Var)
     )
-\end{minted}
+\end{code}
 
 \noindent where \texttt{IdParser}, \texttt{NumParser} and \texttt{BoolParser} define the lexical
 structure of identifiers, numbers and booleans respectively. This parser allows for the following
 transformation between the input and the AST:
 
-\begin{figure}[h]
-    \begin{center}
-        \begin{tikzpicture}[
-                node distance=4cm,
-                font=\small
-            ]
-            \node (input) {
-                \begin{minipage}{0.25\textwidth}
-                    \begin{minted}{text}
-                        foo(6 + bar(4), 2)
-                    \end{minted}
-                \end{minipage}
-            };
+\begin{tcolorbox}
+    \begin{minted}{scala}
+        // input
+        foo(6 + bar(4), 2)
+    \end{minted}
+    \tcblower
+    \begin{minted}{scala}
+        // AST
+        Call("foo", Seq(
+            Op(
+                Num(6),
+                "+",
+                Call("bar", Seq(Num(4)))
+            ),
+            Num(2)
+        ))
+    \end{minted}
+\end{tcolorbox}
 
-            \node (output) [right=of input] {
-                \begin{minipage}{0.3\textwidth}
-                    \begin{minted}{scala}
-                        Call("foo", Seq(
-                            Op(
-                                Num(6),
-                                "+",
-                                Call("bar", Seq(
-                                    Num(4)
-                                ))
-                            ),
-                            Num(2)
-                        ))
-                    \end{minted}
-                \end{minipage}
-            };
+% \begin{figure}[h]
+%     \begin{center}
+%         \begin{tikzpicture}[
+%                 node distance=4cm,
+%                 font=\small
+%             ]
+%             \node (input) {
+%                 \begin{minipage}{0.29\textwidth}
+%                     \begin{code}{text}
+%                         foo(6 + bar(4), 2)
+%                     \end{code}
+%                 \end{minipage}
+%             };
 
-            \draw[shorten >=0.1cm, shorten <=0.1cm,->] (input) -- (output) node[midway, above]
-            {Parser};
-        \end{tikzpicture}
-    \end{center}
-    \caption{An example of parsing input to AST.}
-\end{figure}
+%             \node (output) [right=of input] {
+%                 \begin{minipage}{0.36\textwidth}
+%                     \begin{code}{scala}
+%                         Call("foo", Seq(
+%                             Op(
+%                                 Num(6),
+%                                 "+",
+%                                 Call("bar", Seq(
+%                                     Num(4)
+%                                 ))
+%                             ),
+%                             Num(2)
+%                         ))
+%                     \end{code}
+%                 \end{minipage}
+%             };
+
+%             \draw[shorten >=0.2cm, shorten <=0.2cm,-Latex] (input) -- (output) node[midway, above]
+%             {Parser};
+%         \end{tikzpicture}
+%     \end{center}
+%     \caption{An example of parsing input to AST.}
+% \end{figure}
 
 A particular implementation detail of the parser is in handling operator precedence. A common
 grammar for parsing with operator precedence, notated in Extended Backus-Naur Form (EBNF), is as
@@ -117,7 +136,7 @@ applied to the parsed output. This is achieved by defining a recursive function 
 parsed output and applies the left-associative transformation. The implementation of this using
 \emph{FastParse} is as follows:
 
-\begin{minted}{scala}
+\begin{code}{scala}
     def lft(a: Exp, b: Seq[(String, Exp)]): Exp = (a, b) match {
         case (`a`, (b, c) :: next) => lft(Op(a, b, c), next)
         case _ => a
@@ -133,7 +152,7 @@ parsed output and applies the left-associative transformation. The implementatio
         NumParser.map(Num) |
         "(" ~ Expr ~ ")"
     ...
-\end{minted}
+\end{code}
 
 As mentioned in Chapter~\ref{sec:design}, care was taken to ensure the grammar created was
 unambiguous and not left-recursive. The final language grammar specification is available in
@@ -145,39 +164,57 @@ After generating the AST from the parser, it is converted to the ANF IR as a ser
 (which can be viewed as lambda abstractions in the lambda calculus) via a Continuation-Passing Style
 function. Consider the following program and it's ANF-style intermediate data representation:
 
-\begin{figure}[h]
-    \begin{center}
-        \begin{tikzpicture}[
-                node distance=1.5cm,
-                font=\small
-            ]
-            \node (input) {
-                \begin{minipage}{0.24\textwidth}
-                    \begin{minted}{text}
-                        foo(6 + bar(4), 2)
-                    \end{minted}
-                \end{minipage}
-            };
+\begin{tcolorbox}
+    \begin{minted}{scala}
+        // program
+        foo(6 + bar(4), 2)
+    \end{minted}
+    \tcblower
+    \begin{minted}{scala}
+        // ANF IR
+        Let("tmp0", Call("bar", [Num(4)]),
+            Let("tmp1", Op(Num(6), "+", Var("tmp0")),
+                Let("tmp2", Call("foo", [Var("tmp1"), Num(2)])
+                    Return(Var("tmp2"))
+                )
+            )
+        )
+    \end{minted}
+\end{tcolorbox}
 
-            \node (output) [right=of input] {
-                \begin{minipage}{0.65\textwidth}
-                    \begin{minted}{scala}
-                        Let("tmp0", Call("bar", [Num(4)]),
-                            Let("tmp1", Op(Num(6), "+", Var("tmp0")),
-                                Let("tmp2", Call("foo", [Var("tmp1"), Num(2)])
-                                    Return(Var("tmp2"))
-                                )
-                            )
-                        )
-                    \end{minted}
-                \end{minipage}
-            };
+% \begin{figure}[h]
+%     \begin{center}
+%         \begin{tikzpicture}[
+%                 node distance=1cm,
+%                 font=\small
+%             ]
+%             \node (input) {
+%                 \begin{minipage}{0.29\textwidth}
+%                     \begin{code}{text}
+%                         foo(6 + bar(4), 2)
+%                     \end{code}
+%                 \end{minipage}
+%             };
 
-            \draw[shorten >=0.1cm, shorten <=0.1cm,->] (input) -- (output);
-        \end{tikzpicture}
-    \end{center}
-    \caption{A representation of ANF IR for the program on the left}.
-\end{figure}
+%             \node (output) [right=of input] {
+%                 \begin{minipage}{0.70\textwidth}
+%                     \begin{code}{scala}
+%                         Let("tmp0", Call("bar", [Num(4)]),
+%                             Let("tmp1", Op(Num(6), "+", Var("tmp0")),
+%                                 Let("tmp2", Call("foo", [Var("tmp1"), Num(2)])
+%                                     Return(Var("tmp2"))
+%                                 )
+%                             )
+%                         )
+%                     \end{code}
+%                 \end{minipage}
+%             };
+
+%             \draw[shorten >=0.2cm, shorten <=0.2cm,-Latex] (input) -- (output);
+%         \end{tikzpicture}
+%     \end{center}
+%     \caption{A representation of ANF IR for the program on the left}.
+% \end{figure}
 
 Observe that the deeper expressions appear before shallower ones in the ANF
 representation. A simple recursive solution for converting the program to ANF would not work as this
@@ -193,7 +230,7 @@ The IR generation function as implemented takes an AST expression and a continua
 takes a value and returns an ANF expression. The CPS function itself then returns the full program
 under an ANF expression. A simplified version of the CPS function is as follows:
 
-\begin{minted}{Scala}
+\begin{code}{Scala}
     def CPS(e: Exp)(k: KVal => KAnf) : KAnf = e match {
         // Values are passed to the continuation function
         case Var(s) => k(KVar(s))
@@ -216,7 +253,7 @@ under an ANF expression. A simplified version of the CPS function is as follows:
             KStructDef(Struct(name, items), k(KVar(name)))
         ...
     }
-\end{minted}
+\end{code}
 
 \subsection{Handling typing}
 
@@ -232,7 +269,7 @@ environment is recursively passed through the function, the scope of the type en
 naturally reflect available types at any given point in the program. Using the example from earlier,
 an updated version of the CPS function that includes type propagation is as follows:
 
-\begin{minted}{scala}
+\begin{code}{scala}
     type TypeEnv = Map[String, Type]
 
     def CPS(e: Exp, ty: TypeEnv)(k: (KVal, TypeEnv) => KAnf) : KAnf = e match {
@@ -269,7 +306,7 @@ an updated version of the CPS function that includes type propagation is as foll
             KStructDef(Struct(name, items), k(KVar(name), updated_ty))
         ...
     }
-\end{minted}
+\end{code}
 
 \section{Enumerated Types and Pattern Matching}
 
@@ -277,7 +314,7 @@ an updated version of the CPS function that includes type propagation is as foll
 
 Consider the following program containing an enum definition and a pattern matching expression:
 
-\begin{minted}{scala}
+\begin{code}{scala}
     enum Days = Spring | Summer | Autumn | Winter;
 
     def main() = {
@@ -289,12 +326,10 @@ Consider the following program containing an enum definition and a pattern match
         });
         0
     }
-\end{minted}
+\end{code}
 
 The LLVM IR does not have a native representation of enums or pattern matching. To accommodate enums
-and pattern matching, a pre- and post-processing step is introduced to the ANF IR generation. Both
-the pre- and post-processing steps are implemented as a series of recursive functions that traverse
-the AST and ANF IR respectively.
+and pattern matching, a pre- and post-processing step is introduced to the ANF IR generation.
 
 The pre-processing step is responsible for extracting all enum definitions from the AST, collecting
 them into a map from enum names to their possible values, and transforming match expressions into a
@@ -302,7 +337,7 @@ series of if-else expressions. This step is done prior to the ANF IR generation 
 need to handle the pattern matching transformation within the ANF IR generation itself. Using the
 example above, the pre-processing step would transform the program into:
 
-\begin{minted}{scala}
+\begin{code}{scala}
     def main() = {
         val contrivedExample: Season = Season::Spring;
         print(
@@ -316,20 +351,50 @@ example above, the pre-processing step would transform the program into:
         );
         0
     }
-\end{minted}
+\end{code}
+
+This step is implemented as a series of recursive functions that traverse the AST and transform the
+program accordingly.
+
+\begin{code}{scala}
+    // Removes Enum definitions from the AST and returns them seperately
+    def extract_enums(e: Exp) : (Map[String, Type], Exp) = e match {
+        case Sequence(e1: EnumDef, e2) =>
+            val (enums, e_) = extract_enums(e2)
+            (enums + (e1.name -> EnumType(e1.vals)), e_)
+        // ... Other recursive cases ...
+        case e: EnumDef => (Map(e.name -> EnumType(e.vals)), e)
+        case e => (Map(), e)
+    }
+
+    // Convert match statements to if-else statements
+    def transform_match_to_if(e: Exp) : Exp = e match {
+        case Match(a, cases) =>
+            // Fold start value is a no-op (0 + 0) if no default case is given
+            cases.foldRight[Exp](Op(Num(0), "+", Num(0)))((mcase, acc) => {
+                val MCase(root, item, exp) = mcase
+                if root == "" && item == "_" then
+                    transform_match_to_if(exp)    // default
+                else
+                    If(Op(Var(a), "==", EnumRef(root, item)), transform_match_to_if(exp), Some(acc))
+            })
+        // ... Other recursive cases ...
+        case e => e
+    }
+\end{code}
 
 The post-processing step is responsible for replacing enum references with their corresponding
 integer values, using the map generated in the pre-processing step. The integer value assigned to
 each enum value is determined by the index in which they are defined in the enum definition,
 identical to the behaviour of C and C++ enums. This step is done after the ANF IR generation to
-allow for the specific enum types to be properly propagated through the ANF IR. The post-processing
+allow for the specific enum types to be properly propagated through the ANF IR\@. The post-processing
 step would transform the program into\footnote{For illustration purposes, this transformation is
-    shown as the program equivalent to the resulting ANF IR. In reality, the post-processing step would
+    shown as the program equivalent to the resulting ANF IR\@. In reality, the post-processing step would
     transform the ANF IR directly.}:
 
-\begin{minted}{scala}
+\begin{code}{scala}
     def main() = {
-        val contrivedExample: Integer = 0;
+        val contrivedExample: Int = 0;
         print(
             if (contrivedExample == 0) {
                 true
@@ -341,15 +406,48 @@ step would transform the program into\footnote{For illustration purposes, this t
         );
         0
     }
-\end{minted}
+\end{code}
 
-\noindent At this point, all references to enums have been removed, and the program is in a form that can be
+This step is also implemented as a series of recursive functions that traverse the ANF IR, with the
+enum replacement carried out as a simple map lookup.
+
+\begin{code}{scala}
+    // ...
+    case v: KEnum =>
+        en_map.get(v.root) match {
+            // check if enum is in map
+            case Some(EnumType(items)) =>
+                val idx = items.indexOf(v.item)
+                // check if valid enum value
+                if idx == -1 then
+                    throw new Exception("Undefined enum value")
+                KNum(idx)
+            case _ => throw new Exception("Undefined enum type")
+        }
+    // ...
+\end{code}
+
+At this point, all references to enums have been removed, and the program is in a form that can be
 directly translated to LLVM IR.
 
 \section{Composite Types}
 
-The implementation of composite types (structs) is vastly different from that of enums, as the
-former requires the generation of a new type in the LLVM IR.
+The implementation of composite types (structs) is quite different from that of enums, as the former
+requires the generation of a new type in the LLVM IR\@. The following program demonstrates the use
+of structs:
+
+\begin{code}{scala}
+    struct Point = {
+        x: Int,
+        y: Int
+    };
+
+    def main() = {
+        val p: Point = Point(1, 2);
+        print(p.x + p.y);
+        0
+    }
+\end{code}
 
 % Hoist from let bindings
 % compile struct defs
