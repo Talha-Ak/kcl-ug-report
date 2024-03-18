@@ -15,9 +15,10 @@
 \usepackage{microtype}
 \usepackage{tikz}
 \usetikzlibrary{positioning,arrows.meta}
-\usepackage{tcolorbox}
-\tcbuselibrary{minted}
+\usepackage[minted,skins,breakable]{tcolorbox}
 \newtcblisting{code}[1]{
+    enhanced,
+    breakable,
     listing only,
     minted language=#1
 }

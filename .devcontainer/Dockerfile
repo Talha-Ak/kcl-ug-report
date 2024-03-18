@@ -23,7 +23,7 @@ RUN tlmgr install \
     # formatting
     listings setspace \
     # tcolorbox
-    tcolorbox environ \
+    tcolorbox environ pdfcol tikzfill \
     # standalone
     standalone filehook svn-prov \
     # minted
