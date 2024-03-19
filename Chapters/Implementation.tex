@@ -1,5 +1,12 @@
 \chapter{Implementation}
 
+This chapter details the implementation of the compiler, with the first few sections covering all
+major phases from parsing to LLVM IR generation. Where appropriate, examples of how the language is
+represented at each stage of the compilation process will be provided. The final sections of this
+chapter will specifically cover the implementation and handling of closures and higher-order
+functions, as these language features first require the full understanding of the implementation to
+be explained effectively.
+
 \section{Parsing}
 
 As the library used for parsing, \emph{FastParse}, is a parser combinator library, the parser is
@@ -160,9 +167,10 @@ Appendix~\ref{app:grammar}.
 
 \section{IR Generation}
 
-After generating the AST from the parser, it is converted to the ANF IR as a series of let-expressions
-(which can be viewed as lambda abstractions in the lambda calculus) via a Continuation-Passing Style
-function. Consider the following program and it's ANF-style intermediate data representation:
+After generating the AST from the parser, it is converted to the ANF IR as a series of
+let-expressions, defining the scope of variables and their values. This can be seen as equivalent to
+lambda abstractions in the lambda calculus. The conversion is performed via a Continuation-Passing
+Style function. Consider the following program and it's ANF-style intermediate data representation:
 
 \begin{tcolorbox}
     \begin{minted}{scala}
@@ -255,6 +263,9 @@ under an ANF expression. A simplified version of the CPS function is as follows:
     }
 \end{code}
 
+The \texttt{Fresh} function is used to generate a globally unique name for each temporary variable
+introduced, in order to fulfill the SSA requirements that LLVM IR has.
+
 \subsection{Handling typing}
 
 As the LLVM IR is statically typed, the ANF IR to be generated must also be typed. While more
@@ -310,8 +321,13 @@ an updated version of the CPS function that includes type propagation is as foll
 
 \section{Enumerated Types and Pattern Matching}
 
-% We provide an example to illustrate the problem of enums and pattern matching
-
+% Need to contend with how to compile the definition, and the reference of an enum.
+The implementation of enums and pattern matching requires the consideration of two main aspects:
+\begin{enumerate}
+    \singlespacing
+    \item The definition of enums and their values.
+    \item Referencing enums in comparisons and pattern matching expressions.
+\end{enumerate}
 Consider the following program containing an enum definition and a pattern matching expression:
 
 \begin{code}{scala}
@@ -387,10 +403,10 @@ The post-processing step is responsible for replacing enum references with their
 integer values, using the map generated in the pre-processing step. The integer value assigned to
 each enum value is determined by the index in which they are defined in the enum definition,
 identical to the behaviour of C and C++ enums. This step is done after the ANF IR generation to
-allow for the specific enum types to be properly propagated through the ANF IR\@. The post-processing
-step would transform the program into\footnote{For illustration purposes, this transformation is
-    shown as the program equivalent to the resulting ANF IR\@. In reality, the post-processing step would
-    transform the ANF IR directly.}:
+allow for the specific enum types to be properly propagated through the ANF IR\@. The
+post-processing step would transform the program into\footnote{For illustration purposes, this
+transformation is shown as the program equivalent to the resulting ANF IR\@. In reality, the
+post-processing step would transform the ANF IR directly.}:
 
 \begin{code}{scala}
     def main() = {
@@ -427,14 +443,74 @@ enum replacement carried out as a simple map lookup.
     // ...
 \end{code}
 
-At this point, all references to enums have been removed, and the program is in a form that can be
-directly translated to LLVM IR.
+At this point, all references to enums have been removed, and the program is in a form that can
+almost directly be translated to LLVM IR.
+
+\section{LLVM IR Generation}
+
+After both the ANF IR generation and post-processing steps, the state of the program is such that
+the chain of let-expressions encompasses the entire program, with the final continuation function
+being the return statement. This includes the definitions of functions, structs and enums, as well
+as the main function itself. To extract certain constructs like function definitions from these
+let-expressions, a recursive function is used to hoist them out and into the top-level of the
+program. This is done to ensure that definitions are available globally, as they are in the source
+language.
+
+\begin{code}{scala}
+    def hoist(e: KAnf): (List[CFunc], KAnf, List[Env], List[Struct]) = e match {
+        case KFun(fnName, args, ret, body, next) => {
+            val (fns, e, envs, structs) = hoist(body)
+            val (fns2, e2, envs2, structs2) = hoist(next)
+            val entry = Fresh("entry")
+            val fn = CFunc(fnName, args, ret, e)
+            (fn :: fns ::: fns2, e2, envs ::: envs2, structs ::: structs2)
+        }
+        case KIf(x1, e1, e2) => {
+            val (fns, t, envs, structs) = hoist(e1)
+            val (fns2, f, envs2, structs2) = hoist(e2)
+            val thn = Fresh("then")
+            val els = Fresh("else")
+            (fns ::: fns2, KIf(x1, t, f), envs ::: envs2, structs ::: structs2)
+        }
+        case KLetEnv(x, env: Env, next) => {
+            val (fns, e1, envs, structs) = hoist(next)
+            (fns, KLetEnv(x, env, e1), env :: envs, structs)
+        }
+        case KLet(x, v, next) => {
+            val (fns, e1, envs, structs) = hoist(next)
+            (fns, KLet(x, v, e1), envs, structs)
+        }
+        case KConst(x, v, e) => {
+            val (fns, e1, envs, structs) = hoist(e)
+            (fns, KConst(x, v, e1), envs, structs)
+        }
+        case KStructDef(struct, e) => {
+            val (fns, e1, envs, structs) = hoist(e)
+            (fns, KStructDef(struct, e1), envs, struct :: structs)
+        }
+        case _ => (Nil, e, Nil, Nil)
+    }
+\end{code}
+
+The final step of the compilation process is the generation of LLVM IR from the ANF IR\@. This is
+done by traversing the ANF IR and emitting the corresponding LLVM IR for each construct.
+
+TBC
 
 \section{Composite Types}
 
-The implementation of composite types (structs) is quite different from that of enums, as the former
-requires the generation of a new type in the LLVM IR\@. The following program demonstrates the use
-of structs:
+The implementation of composite types (structs) requires the handling of three main concerns:
+
+\begin{enumerate}
+    \singlespacing
+    \item The definition of structs and their members.
+    \item The allocation of memory for a new instance of a struct.
+    \item The referencing of struct members.
+\end{enumerate}
+
+Despite structs sharing the same two concerns as enums, the implementation detail is quite different
+from that of enums, as the former requires the generation of a new type and the allocation of memory
+for the struct in the LLVM IR\@. The following program demonstrates the use of structs:
 
 \begin{code}{scala}
     struct Point = {
@@ -449,8 +525,97 @@ of structs:
     }
 \end{code}
 
-% Hoist from let bindings
-% compile struct defs
-% compiile struct refs by getelementptr, load
+After the ANF IR generation, the struct definition is enclosed within the let-expression
+encompassing the entire program. As with function definitions, the struct definition is hoisted out
+into the top-level of the program.
+
+Structs in the LLVM IR are represented as a series of elements, with each element being a member of
+the struct. These elements do not have names as in the source language, but are instead accessed by
+their index. It is therefore important to keep track of the order of elements in the struct
+definition throughout generation. The struct definition is then emitted as a new type in the LLVM
+IR\@, like so:
+
+\begin{tcolorbox}
+    \begin{minted}{scala}
+        // Program
+        struct Point = {
+            x: Int,
+            y: Int
+        };
+    \end{minted}
+    \tcblower
+    \begin{minted}{llvm}
+        ; LLVM IR
+        %Point = type { i32, i32 }
+    \end{minted}
+\end{tcolorbox}
+
+When creating a new instance of a struct, memory must be allocated for it. Memory allocation in the
+LLVM IR can either be done on the stack or the heap. Allocating to the stack provides a simpler and
+efficient solution, as the memory is automatically deallocated when a function returns. However,
+this raises implications for the lifetime of the struct, as it is only valid within a narrow scope
+as determined by the stack. Allocating to the heap (e.g. \texttt{malloc} in C) provides a more
+flexible solution, as the memory is valid for the lifetime of the program, but requires either
+explicit manual deallocation or the creation of a garbage collector.
+
+For the purposes of this project, memory allocation is done on the stack using the \texttt{alloca}
+instruction in the LLVM IR, returning a pointer to the allocated memory. For each element in the
+struct to be allocated, a \texttt{getelementptr} instruction is used to calculate the address of the
+element within the struct via its index, and a \texttt{store} instruction is used to store the value
+of the element. The following is the LLVM IR for the creation of a new instance of the
+\texttt{Point} struct:
+
+\begin{tcolorbox}
+    \begin{minted}{scala}
+        // Program
+        val p: Point = Point(1, 2);
+    \end{minted}
+    \tcblower
+    \begin{minted}{llvm}
+        ; LLVM IR
+        %p = alloca %Point
+        %tmp0 = getelementptr %Point, %Point* %p, i32 0, i32 0
+        store i32 1, i32* %tmp0
+        %tmp1 = getelementptr %Point, %Point* %p, i32 0, i32 1
+        store i32 2, i32* %tmp1
+    \end{minted}
+\end{tcolorbox}
+
+The referencing of struct members is done by using the \texttt{getelementptr} instruction to
+calculate the address of the struct member via its index, and the \texttt{load} instruction to load
+the value of the member into a local variable. To access the \texttt{x} and \texttt{y} members of
+the \texttt{Point} struct, the following LLVM IR is generated:
+
+\begin{tcolorbox}
+    \begin{minted}{scala}
+        // Program
+        p.x + p.y
+    \end{minted}
+    \tcblower
+    \begin{minted}{llvm}
+        ; LLVM IR
+        %tmp2 = getelementptr %Point, %Point* %p, i32 0, i32 0
+        %tmp3 = load i32, i32* %tmp2
+        %tmp4 = getelementptr %Point, %Point* %p, i32 0, i32 1
+        %tmp5 = load i32, i32* %tmp4
+        %tmp6 = add i32 %tmp3, %tmp5
+    \end{minted}
+\end{tcolorbox}
 
 \section{Closures and Higher-order functions}
+
+TBC
+
+\begin{itemize}
+\item go through prog, find functions
+\item detect if free variables
+\item if yes, closure.
+\item create environment,
+\item rewrite body of closure to access environment
+\item return environment/fn ptr instead
+\item fix types
+\item fix calls to closure
+\item hoist
+\item create struct for closure
+\item getelementmptr, load, ptr to ptr to fn
+\end{itemize}
