@@ -342,6 +342,7 @@ Consider the following program containing an enum definition and a pattern match
         });
         0
     }
+    // Output: true
 \end{code}
 
 The LLVM IR does not have a native representation of enums or pattern matching. To accommodate enums
@@ -353,7 +354,8 @@ series of if-else expressions. This step is done prior to the ANF IR generation 
 need to handle the pattern matching transformation within the ANF IR generation itself. Using the
 example above, the pre-processing step would transform the program into:
 
-\begin{code}{scala}
+\begin{tcolorbox}
+    \begin{minted}{scala}
     def main() = {
         val contrivedExample: Season = Season::Spring;
         print(
@@ -367,7 +369,13 @@ example above, the pre-processing step would transform the program into:
         );
         0
     }
-\end{code}
+    \end{minted}
+    \tcblower
+    \footnotesize
+    For illustration purposes, this code is a representation of the changes that would be made to
+    the ANF IR.
+\end{tcolorbox}
+
 
 This step is implemented as a series of recursive functions that traverse the AST and transform the
 program accordingly.
@@ -404,25 +412,29 @@ integer values, using the map generated in the pre-processing step. The integer 
 each enum value is determined by the index in which they are defined in the enum definition,
 identical to the behaviour of C and C++ enums. This step is done after the ANF IR generation to
 allow for the specific enum types to be properly propagated through the ANF IR\@. The
-post-processing step would transform the program into\footnote{For illustration purposes, this
-transformation is shown as the program equivalent to the resulting ANF IR\@. In reality, the
-post-processing step would transform the ANF IR directly.}:
+post-processing step would transform the program into:
 
-\begin{code}{scala}
-    def main() = {
-        val contrivedExample: Int = 0;
-        print(
-            if (contrivedExample == 0) {
-                true
-            } else if (contrivedExample == 2) {
-                true
-            } else {
-                false
-            }
-        );
-        0
-    }
-\end{code}
+\begin{tcolorbox}
+    \begin{minted}{scala}
+        def main() = {
+            val contrivedExample: Int = 0;
+            print(
+                if (contrivedExample == 0) {
+                    true
+                } else if (contrivedExample == 2) {
+                    true
+                } else {
+                    false
+                }
+            );
+            0
+        }
+    \end{minted}
+    \tcblower
+    \footnotesize
+    For illustration purposes, this code is a representation of the changes that would be made to
+    the ANF IR.
+\end{tcolorbox}
 
 This step is also implemented as a series of recursive functions that traverse the ANF IR, with the
 enum replacement carried out as a simple map lookup.
@@ -523,6 +535,7 @@ for the struct in the LLVM IR\@. The following program demonstrates the use of s
         print(p.x + p.y);
         0
     }
+    // Output: 3
 \end{code}
 
 After the ANF IR generation, the struct definition is enclosed within the let-expression
@@ -535,13 +548,10 @@ their index. It is therefore important to keep track of the order of elements in
 definition throughout generation. The struct definition is then emitted as a new type in the LLVM
 IR\@, like so:
 
-\begin{tcolorbox}
+\begin{tcolorbox}[sidebyside]
     \begin{minted}{scala}
         // Program
-        struct Point = {
-            x: Int,
-            y: Int
-        };
+        struct Point = {x: Int, y: Int};
     \end{minted}
     \tcblower
     \begin{minted}{llvm}
@@ -604,18 +614,227 @@ the \texttt{Point} struct, the following LLVM IR is generated:
 
 \section{Closures and Higher-order functions}
 
-TBC
+As mentioned in Chapter~\ref{sec:design}, there are three steps to implementing closures and
+higher-order functions:
 
-\begin{itemize}
-\item go through prog, find functions
-\item detect if free variables
-\item if yes, closure.
-\item create environment,
-\item rewrite body of closure to access environment
-\item return environment/fn ptr instead
-\item fix types
-\item fix calls to closure
-\item hoist
-\item create struct for closure
-\item getelementmptr, load, ptr to ptr to fn
-\end{itemize}
+\begin{enumerate}
+    \singlespacing
+    \item Identifying free variables.
+    \item Performing closure conversion.
+    \item Hoisting the closure to the top-level.
+\end{enumerate}
+
+The following program demonstrates the use of closures and higher-order functions:
+
+\begin{tcolorbox}
+    \begin{minted}{scala}
+    def foo(x: Int): (Int) => Int = {
+        def bar(y: Int): Int = x + y;
+        bar
+    };
+
+    def main() = {
+      val add: (Int) => Int = foo(9);
+      print(add(10));
+      0
+    }
+    // Output: 19
+    \end{minted}
+    \tcblower
+    \footnotesize
+    An example program that demonstrates the use of closures and higher-order functions.
+    This example will be used throughout this section to illustrate the changes required.
+\end{tcolorbox}
+
+The general idea is to convert the function into a closure, which will be a LLVM structure type
+containing the free variables of the closure. The closure will then be rewritten to access the
+environment for these variables. For example, the function definition
+\mintinline{scala}{bar(y: Int): Int}
+in the example above will convert to
+\mintinline{scala}{bar(env: BarEnv, y: Int): Int}.
+
+For identifying free variables within a function the ANF IR is traversed, while collecting all
+variables that are not defined within the function itself. This is done by maintaining a set of
+variables that are defined within the function, and adding any variable that is referenced but not
+defined to the set of free variables. For instance, the function \texttt{bar} in the example above
+contains free variable \texttt{x}. A series of recursive functions are used to achieve this:
+
+\begin{code}{scala}
+    def free_anf(e: KAnf): Set[KVar] = e match {
+        case KFun(fnName, args, _, body, in) =>
+            (free_anf(body) ++ free_anf(in))
+                .filterNot(x => args.map(_._1).contains(x.s) || x.s == fnName)
+        case KLet(x, e1, e2) => (free_exp(e1) ++ free_anf(e2)).filterNot(_.s == x)
+        case KConst(x, v, e) => free_val(v) ++ free_anf(e)
+        case KIf(x, e1, e2) => free_anf(e1) ++ free_anf(e2)
+        // ... Other recurisve cases ...
+    }
+
+    def free_exp(e: KExp): Set[KVar] = e match {
+        case Kop(o, v1, v2) => free_val(v1) ++ free_val(v2)
+        case KStructDec(struct, vals) => vals.flatMap(free_val).toSet
+        case KCall(o, vrs) => vrs.flatMap(free_val).toSet
+    }
+
+    def free_val(v: KVal): Set[KVar] = v match {
+        case k: KVar => Set(k)
+        case _ => Set()
+    }
+\end{code}
+
+Once the free variables have been identified, the environment is created to store these
+variables. A fresh global name is alloceted to it to avoid any naming collisions.
+Included in the environment is a pointer to the function, allowing the function to be passed around
+as a first-class object:
+\mintinline{scala}{BarEnv = [Ptr, Int]}.
+This environment is effectively the closure, as it contains all the information needed for the
+function to be `closed' over. Note that for each new closure, a new environment type is needed, as
+the free variables may differ between closures.
+
+The function body is then rewritten to access the environment for these variables. By passing the
+environment in as the first argument, the function can index into the corresponding field where a
+free variable would be referenced. The final return statement of the function is also modified to
+return the closure instead of the function itself. As an example, The function \texttt{bar} in the
+example above is rewritten to access the environment for the variable \texttt{x}:
+
+\begin{tcolorbox}
+    \begin{minted}{scala}
+        def foo(x: Int): (Int) => Int = {
+            def bar(env: BarEnv, y: Int): Int = env[1] + y;
+            bar // This is now type of BarEnv, not a function.
+        };
+    \end{minted}
+    \tcblower
+    \footnotesize
+    For illustration purposes, this code is a representation of the changes that would be made
+    to the ANF IR. This is not valid code in the project's current implementation of this language.
+\end{tcolorbox}
+
+Note that the return type of \texttt{foo} is now incorrect! It should be returning the closure
+\mintinline{scala}{BarEnv} instead of a function \mintinline{scala}{(Int) => Int}. This is resolved
+by traversing the ANF IR again and rectifying all references to the function to instead reference
+the closure.
+
+\begin{code}{scala}
+    def convert(e: KAnf): (KAnf, Option[Env]) = e match {
+        case KFun(fnName, args, ret, body, in) => {
+            // Collect free variables
+            val fvs = free_anf(body)
+                .filterNot(x => args.map(_._1).contains(x.s)).toList
+            ...
+            // Create environment
+            val envId = Fresh("env")
+            val newArgs = (envId, EnvType(envId)) +: args
+            val newRet = if next_env.isEmpty then ret else EnvType(next_env.get.name)
+            val newType = FnType(newArgs.map(_._2), newRet)
+            val env = Env(envId, KVar(fnName, newType) :: fvs)
+
+            // For each free variable, reference it from environment
+            val (body2, _) = fvs.zipWithIndex.foldLeft(converted_body, 1) {
+                    // LET x = env[i] IN anf
+                    case ((next, i), (ssaVar, _)) =>
+                        (KLetEnvRef(ssaVar.s, Ref(KVar(envId, EnvType(envId)), i), next), i + 1)
+                }
+
+            val (in2, _) = convert(in)
+            // LET fn = (@fn, fvs...) IN anf
+            val let_env = KLetEnv(fnName, env, in2)
+
+            // Propagate the new type through the program
+            val updated_body = update_types(body2, Map(fnName -> newType))
+            val updated_in = update_types(let_env, Map(fnName -> newType))
+            (KFun(fnName, newArgs, newRet, updated_body, updated_in), Some(env))
+        }
+    // ... Other cases ...
+    }
+\end{code}
+
+For function calls that are now calling a closure, the function pointer within the environment must
+be dereferenced before the function can be called. As the environment is constructed by placing the
+function pointer as the first element, the function pointer can be accessed by indexing into the
+environment with the integer 0. The function call is then rewritten to use the function pointer.
+For example, the call to \texttt{add} in the example above is rewritten to access the function
+pointer from the closure:
+
+\begin{tcolorbox}
+    \begin{minted}{scala}
+        def main() = {
+            val add: BarEnv = foo(9);
+            print(add[0](10));
+            0
+        };
+    \end{minted}
+    \tcblower
+    \footnotesize
+    For illustration purposes, this code is a representation of the changes that would be made
+    to the ANF IR. This is not valid code in the project's current implementation of this language.
+\end{tcolorbox}
+
+After closure conversion is complete and all relevant functions are closed, nested functions can be
+safely hoisted to the top-level of the program. This is done similarly to the hoisting of
+function and struct definitions. At this point, the closures are in a form that can be directly
+translated to LLVM IR.
+
+For lowering closures to LLVM IR, a structure type is created for each environment hoisted to the
+top-level. In the case of the \mintinline{scala}{BarEnv} environment, the LLVM IR would be:
+
+\begin{tcolorbox}
+    \begin{minted}{llvm}
+        ; LLVM IR
+        %env_bar = type { i32 (%env_bar*, i32)*, i32 }
+    \end{minted}
+    \tcblower
+    \footnotesize
+    The first type, \mintinline{llvm}{i32 (%env_bar*, i32)*}, is a function pointer that takes a
+    pointer to the environment and a 32-bit integer (\mintinline{llvm}{i32}) as arguments, returning
+    an \mintinline{llvm}{i32} (i.e., the function \texttt{bar}). The second type,
+    \mintinline{llvm}{i32}, is the free variable \texttt{x} in the closure.
+\end{tcolorbox}
+
+When creating a new instance of a closure, memory must be allocated for it. This is performed
+similarly to the allocation of structs, where stack memory is allocated using the \texttt{alloca}
+instruction in the LLVM IR, returning a pointer to the allocated memory. For each element in the
+closure to be allocated, a \texttt{getelementptr} instruction is used to calculate the address of
+the element within the closure via its index, and a \texttt{store} instruction is used to store the
+value of the element. As the function was hoisted to the top-level, it is globally accessible in the
+LLVM IR, and so can be added into the closure by name directly.
+
+When calling a closure, \texttt{getelementptr} is used to locate the function pointer within the
+closure, and the function is then called using the \texttt{call} instruction after dereferencing the
+function pointer with \texttt{load}.
+
+Finally, when accessing the free variables within the closure, \texttt{getelementptr} is used to
+locate the appropriate field within the closure via its index, and \texttt{load} is used to load the
+value of the free variable into a local variable.
+
+The program example provided at the beginning of this section would be translated to the following
+LLVM IR, after closure conversion:
+
+\begin{code}{llvm}
+    %env_bar = type { i32 (%env_bar*, i32)*, i32 }
+
+    define %env_bar* @foo (i32 %x) {
+        %bar = alloca %env_bar
+        %bar0 = getelementptr %env_bar, %env_bar* %bar, i32 0, i32 0
+        store i32 (%env_bar*, i32)* @bar, i32 (%env_bar*, i32)** %bar0
+        %bar1 = getelementptr %env_bar, %env_bar* %bar, i32 0, i32 1
+        store i32 %x, i32* %bar1
+        ret %env_bar* %bar
+    }
+
+    define i32 @bar (%env_bar* %env, i32 %y) {
+        %tmp_3 = getelementptr %env_bar, %env_bar* %env, i32 0, i32 1
+        %x = load i32, i32* %tmp_3
+        %tmp_4 = add i32 %x, %y
+        ret i32 %tmp_4
+    }
+
+    define i32 @main () {
+        %add = call %env_bar* @foo(i32 9)
+        %tmp_0 = getelementptr %env_bar, %env_bar* %add, i32 0, i32 0
+        %tmp_1 = load i32 (%env_bar*, i32)*, i32 (%env_bar*, i32)** %tmp_1
+        %tmp_2 = call i32 %tmp_2(%env_bar* %add, i32 10)
+        call void @print_i32(i32 %tmp_2)
+        ret i32 0
+    }
+\end{code}
