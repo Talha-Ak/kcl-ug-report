@@ -3,9 +3,9 @@
 This chapter details the implementation of the compiler, with the first few sections covering all
 major phases from parsing to LLVM IR generation. Where appropriate, examples of how the language is
 represented at each stage of the compilation process will be provided. The final sections of this
-chapter will specifically cover the implementation and handling of closures and higher-order
-functions, as these language features first require the full understanding of the implementation to
-be explained effectively.
+chapter will specifically cover the implementation and handling of structs, closures and
+higher-order functions, as these language features first require the full understanding of the
+implementation to be explained effectively.
 
 \section{Parsing}
 
@@ -330,20 +330,26 @@ The implementation of enums and pattern matching requires the consideration of t
 \end{enumerate}
 Consider the following program containing an enum definition and a pattern matching expression:
 
-\begin{code}{scala}
-    enum Days = Spring | Summer | Autumn | Winter;
+\begin{tcolorbox}
+    \begin{minted}{scala}
+        enum Days = Spring | Summer | Autumn | Winter;
 
-    def main() = {
-        val contrivedExample: Season = Season::Spring;
-        print(contrivedExample match {
-            case Season::Spring => true
-            case Season::Autumn => true
-            case _ => false
-        });
-        0
-    }
-    // Output: true
-\end{code}
+        def main() = {
+            val contrivedExample: Season = Season::Spring;
+            print(contrivedExample match {
+                case Season::Spring => true
+                case Season::Autumn => true
+                case _ => false
+            });
+            0
+        }
+        // Output: true
+    \end{minted}
+    \tcblower
+    \footnotesize
+    An example program that demonstrates the use of enums and pattern matching.
+    This example will be used throughout this section to illustrate the changes required.
+\end{tcolorbox}
 
 The LLVM IR does not have a native representation of enums or pattern matching. To accommodate enums
 and pattern matching, a pre- and post-processing step is introduced to the ANF IR generation.
@@ -462,8 +468,8 @@ almost directly be translated to LLVM IR.
 
 After both the ANF IR generation and post-processing steps, the state of the program is such that
 the chain of let-expressions encompasses the entire program, with the final continuation function
-being the return statement. This includes the definitions of functions, structs and enums, as well
-as the main function itself. To extract certain constructs like function definitions from these
+being the return statement. This includes the definitions of functions, structs and closures, as
+well as the main function itself. To extract certain constructs like function definitions from these
 let-expressions, a recursive function is used to hoist them out and into the top-level of the
 program. This is done to ensure that definitions are available globally, as they are in the source
 language.
@@ -504,10 +510,26 @@ language.
     }
 \end{code}
 
-The final step of the compilation process is the generation of LLVM IR from the ANF IR\@. This is
-done by traversing the ANF IR and emitting the corresponding LLVM IR for each construct.
+The final step of the compilation process is the generation of LLVM IR from the ANF IR\@. A prelude
+is added to the top of all programs, containing the necessary LLVM IR code to define runtime library
+code, such as \texttt{print_*} functions. While limited in the scope of this project, the prelude
+can be expanded to include more complex library functions, such as the implementation of language
+features like strings. This could be achieved by writing the implementation in a higher-level
+language like C, and then appending the emitted LLVM IR to the final executable.
 
-TBC
+The LLVM IR generation is done by recursively traversing the ANF IR, emitting the corresponding LLVM
+IR for each construct. Certain constructs, such as arithmetic operations, are conditional on the
+type of the values involved. For example, the LLVM IR for adding two integers is different from
+adding two floating-point numbers.
+
+Other constructs, such as floating point literals themselves, require special handling as they
+cannot be emitted directly. The LLVM IR require floating point literals to be exact representations
+of the floating point number, using the 64-bit IEEE-754 standard. This requires all (32-bit) floats
+to first be extended to (64-bit) doubles, before being converted to their hexadecimal
+representation.
+
+The LLVM IR is then written to a file, which can be in turn be compiled using the LLVM toolchain, or
+ran using an LLVM interpreter.
 
 \section{Composite Types}
 
@@ -524,19 +546,25 @@ Despite structs sharing the same two concerns as enums, the implementation detai
 from that of enums, as the former requires the generation of a new type and the allocation of memory
 for the struct in the LLVM IR\@. The following program demonstrates the use of structs:
 
-\begin{code}{scala}
-    struct Point = {
-        x: Int,
-        y: Int
-    };
+\begin{tcolorbox}
+    \begin{minted}{scala}
+        struct Point = {
+            x: Int,
+            y: Int
+        };
 
-    def main() = {
-        val p: Point = Point(1, 2);
-        print(p.x + p.y);
-        0
-    }
-    // Output: 3
-\end{code}
+        def main() = {
+            val p: Point = Point(1, 2);
+            print(p.x + p.y);
+            0
+        }
+        // Output: 3
+    \end{minted}
+    \tcblower
+    \footnotesize
+    An example program that demonstrates the use of structs.
+    This example will be used throughout this section to illustrate the changes required.
+\end{tcolorbox}
 
 After the ANF IR generation, the struct definition is enclosed within the let-expression
 encompassing the entire program. As with function definitions, the struct definition is hoisted out
