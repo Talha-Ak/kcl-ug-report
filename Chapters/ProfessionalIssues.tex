@@ -1,4 +1,65 @@
 \chapter{Legal, Social, Ethical and Professional Issues}
-Your report should include a chapter with a reasoned discussion about legal, social ethical and professional issues within the context of your project problem. You should also demonstrate that you are aware of the regulations governing your project area and the Code of Conduct \& Code of Good Practice issued by the British Computer Society, and that you have applied their principles, where appropriate, as you carried out your project.
 
-\section{Section Heading}
+This chapter discusses the implications of the British Computing Society (BCS) Code of Conduct on
+the project, as well as other legal, social, ethical and professional considerations that may affect
+the project. While a project on a compiler may not necessarily have as many legal and ethical
+considerations in comparison to other projects, it is still important to consider these issues in
+order to ensure that the project is conducted professionally.
+
+\section{The BCS Code of Conduct}
+
+The BCS define a code of conduct that `set rules and professional standards to direct the behaviour
+of its members in professional matters.'~\autocite{bcs}. The code of conduct highlights four key
+principles that must be adhered to:
+
+\begin{enumerate}
+    \item \textbf{Public Interest:} Due regard must be given to the safety and interests of others.
+          The relevance of this principle to the development of a compiler is limited, as the effect
+          of a compiler on the public is minimal.
+
+          Theoretically, if the compiler were to be distributed as a binary, a malicious actor could
+          inject malicious code into the compiler, infecting all programs compiled with it. A
+          similar vulnerability is a compiler backdoor, where bootstrapped compilers (compilers
+          compiled with themselves) could contain a malicious payload that replicates itself in all
+          future versions of the compiler.~\autocite{thompson1984reflection}
+
+          However, the source code of this project is open-source, and not bootstrapped (i.e. it is
+          not compiled with itself, but with Scala), and is therefore not a realistic concern.
+
+    \item \textbf{Professional Competence and Integrity:} The work carried out must be done to the
+          best of the one's ability, without misrepresenting one's skills or knowledge. Within the
+          remit of this project, justification was provided for the decisions that were made, and
+          where possible were built upon reputable sources.
+
+    \item \textbf{Duty to Relevant Authority:} Care must be taken to ensure that work completed
+          under the Relevant Authority (in this case, King's College London) meets their
+          requirements, and that any conflicts of interest are declared. Throughout the project, the
+          Academic Regulations of the College, the requirements of module 6CCS3PRJ, as well as the
+          Academic Honesty and Integrity Policy, were adhered to. No conflicts of interest were
+          present.
+
+    \item \textbf{Duty to the Profession:} The reputation of the profession must be upheld as a
+          personal duty, acting in a way that promotes the profession. This project is presented as
+          a case study for the implementation of functional language constructs in LLVM IR, where
+          others are able to learn and improve upon the work done here.
+\end{enumerate}
+
+\section{Other implications}
+
+The software licence chosen for a compiler is important, as it determines how the software can be
+used, modified and distributed. Not only does the licence affect the software itself, but it may
+also potentially effect the software that is compiled with it.
+
+For instance, if the runtime library of a compiler is licensed under the GNU General Public
+License (GPL), then any software compiled with the compiler must also be licensed under the GPL.
+This is because the library is linked with the compiled software, and the GPL requires that any
+software linked with GPL software must also be licensed under the GPL.
+
+In fact, the GCC compiler \emph{does} licence its runtime libraries under the GPL, which is why the
+authors of GCC include a GCC Runtime Library Exception, allowing the compilation of non-GPL software
+with certain GPL-licensed library files.~\autocite{gcc-exception}
+
+An appropriate licence for this project is the MIT Licence, which allows for the software to be
+used, modified and distributed freely, as long as the original licence and copyright notice is
+included. This licence is permissive, and allows for the software to be used in both open-source and
+proprietary projects.
