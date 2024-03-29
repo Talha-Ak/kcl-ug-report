@@ -31,5 +31,5 @@ RUN tlmgr install \
     # BNF syntax
     mdwtools \
     # other
-    texcount microtype \
+    texcount microtype booktabs \
     && texhash

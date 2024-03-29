@@ -6,8 +6,11 @@
 \usepackage[mode=buildnew]{standalone}
 \usepackage{minted}
 \setminted{autogobble,breaklines,baselinestretch=1}
-\usepackage{syntax}
 \usepackage{multicol}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{syntax}
 \grammarindent1in
 \usepackage{etoolbox}
 \BeforeBeginEnvironment{grammar}{\singlespacing}
@@ -15,7 +18,7 @@
 \usepackage{microtype}
 \usepackage{tikz}
 \usetikzlibrary{positioning,arrows.meta}
-\usepackage[minted,skins,breakable]{tcolorbox}
+\usepackage[minted,skins,breakable,raster]{tcolorbox}
 \newtcblisting{code}[1]{
     enhanced,
     breakable,
@@ -28,7 +31,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \title{
     6CCS3PRJ Final Year \\
-    LLVM IR as a Target for Functional Language Compilation
+    Exploring LLVM IR as a Target for Functional Language Compilation
 }
 \author{Talha Abdulkuddus}
 \studentID{20076327}

@@ -6,13 +6,17 @@ Benefits of this paradigm include the ability to apply formal mathematical reaso
 simpler parallelisation of programs, while encouraging modularity and code reuse.
 
 Advantages of this paradigm have even led to the adoption of some functional language features in
-other popular languages, such as Java, C\#, and Rust. To facilitate programming in this paradigm,
-modern functional languages typically provide a number of features, such as higher-order functions,
-pattern matching, and algebraic data types \autocite{hudak1989conception}. Typical imperative
-constructs such as loops and mutable variables are also discouraged, instead favouring recursion and
-immutable data structures. These characteristics make compilers for functional languages an
-interesting case study, as more work is offloaded to the compiler for transforming programs into
-efficient machine code---code that is in a different paradigm to that of a functional language.
+other popular languages, such as Java, C\#, and Rust. Even during the development of this project,
+new languages have been released that take heavy inspiration from the functional paradigm, such as
+Erlang runtime-based language Gleam.
+
+To facilitate programming in this paradigm, modern functional languages typically provide a number
+of features, such as higher-order functions, pattern matching, and algebraic data types
+\autocite{hudak1989conception}. Typical imperative constructs such as loops and mutable variables
+are also discouraged, instead favouring recursion and immutable data structures. These
+characteristics make compilers for functional languages an interesting case study, as more work is
+offloaded to the compiler for transforming programs into efficient machine code---code that is in a
+different paradigm to that of a functional language.
 
 One method of compiling functional languages is via the LLVM toolchain, which provides a collection
 of utilities for compiling, optimising, and linking programs. For language designers, one can create
