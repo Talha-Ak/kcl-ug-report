@@ -3,11 +3,14 @@
 Functional languages are a class of programming languages that stem from the lambda calculus,
 treating computation as the evaluation of functions, avoiding side effects and mutable state.
 Benefits of this paradigm include the ability to apply formal mathematical reasoning about programs,
-simpler parallelisation of programs, while encouraging modularity and code reuse.
+while encouraging modularity and code reuse. Functional languages are often easier to reason about,
+as the lack of side effects makes programs more predictable and easier to test. This predictability
+also makes functional languages more amenable to automatic parallelisation, as the lack of side
+effects means that functions can be executed in any order without affecting the result.
 
 Advantages of this paradigm have even led to the adoption of some functional language features in
-other popular languages, such as Java, C\#, and Rust. Even during the development of this project,
-new languages have been released that take heavy inspiration from the functional paradigm, such as
+other popular languages, including Java, C\#, and Rust. During the development of this project, new
+languages have been released that take heavy inspiration from the functional paradigm, such as the
 Erlang runtime-based language Gleam.
 
 To facilitate programming in this paradigm, modern functional languages typically provide a number
@@ -15,8 +18,8 @@ of features, such as higher-order functions, pattern matching, and algebraic dat
 \autocite{hudak1989conception}. Typical imperative constructs such as loops and mutable variables
 are also discouraged, instead favouring recursion and immutable data structures. These
 characteristics make compilers for functional languages an interesting case study, as more work is
-offloaded to the compiler for transforming programs into efficient machine code---code that is in a
-different paradigm to that of a functional language.
+offloaded to the compiler for transforming programs into efficient imperative machine code---code
+that is in a different paradigm to that of a functional language.
 
 One method of compiling functional languages is via the LLVM toolchain, which provides a collection
 of utilities for compiling, optimising, and linking programs. For language designers, one can create
@@ -25,21 +28,46 @@ variety of architectures by leveraging the LLVM backend. This approach can be pr
 comparison to:
 
 \begin{itemize}
-    \item \textbf{Compiling to native machine code:} This approach requires a separate backend for
-          each architecture, and can be difficult to implement for more complex architectures.
-    \item \textbf{Compiling to a virtual machine (VM):} This approach requires the overhead of a VM
-          runtime to be installed on the target machine, typically optimised for imperative
-          languages.
+    \item \textbf{Compiling to native machine code:} While theoretically the most efficient method
+          of compiling a program, this approach requires the language designer to implement a
+          backend for each target architecture. This can be time-consuming and error-prone, as the
+          language designer must be familiar with the intricacies of each architecture.
+
+    \item \textbf{Compiling to a virtual machine (VM):} This approach involves compiling the program
+          to a VM runtime, which can then be executed on any machine that has the VM installed.
+          While this approach is portable, it can be less performant than compiling to native
+          machine code, as the program must be interpreted by the VM at runtime. Additionally, the
+          language designer must either implement a VM runtime for each target architecture
+          (providing similar challenges to compiling to native machine code), or rely on an existing
+          VM runtime (which may not consider the intricacies of a functional language when executing
+          the program).
 \end{itemize}
+
+The LLVM IR also provides a number of optimisations that can be applied to the program before it is
+compiled to machine code, such as dead code elimination, loop unrolling, and inlining. These
+optimisations can be applied to the program without the need for the language designer to implement
+them, and can be tailored to the target architecture.
+
+\section{Aims}
 
 This project aims to implement a compiler for a small functional language, targeting the LLVM
 Intermediate Representation (IR). This language (inspired by the language presented in the KCL
 module 6CCS3CFL) will support a number of features, including higher order functions and pattern
-matching.
+matching. The project seeks to evaluate the effectiveness of the LLVM toolchain as a backend for a
+functional language compiler, as it was originally designed for imperative languages like C and
+C++~\autocite{lattner2004llvm}, and to explore the challenges of compiling functional languages to
+imperative machine code.
 
 \section{Report Structure}
 
-Contemporary compiler design will be explored within Chapter~\ref{sec:background}, with a focus on
-translation between functional languages and the LLVM IR. The full scope of the compiler and
-language will be defined in Chapter~\ref{sec:requirements}, with the design of the compiler
-presented in Chapter~\ref{sec:design}.
+Contemporary compiler design will be explored within Chapter~\ref{ch:background}, with a focus on
+translation between functional languages and the LLVM IR. As functional languages rely on the
+compiler to perform more work than imperative languages, analysing how modern compilers are designed
+to facilitate this is of significance. The full scope of the compiler and language will be defined
+in Chapter~\ref{ch:requirements}, with the design of the compiler architecture presented in
+Chapter~\ref{ch:design}. The implementation of the compiler, including how specific language
+features are translated to the LLVM IR, will be discussed in Chapter~\ref{ch:implementation}.
+Evaluation of the compiler, including performance in comparison to other modern compilers, will be
+presented in Chapter~\ref{ch:evaluation}. An analysis of legal, social, ethical and professional
+concerns related to this project is discussed in Chapter~\ref{ch:professional-issues}, with
+conclusions drawn in Chapter~\ref{ch:conclusion}.
