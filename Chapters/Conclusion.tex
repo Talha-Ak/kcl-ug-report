@@ -1,3 +1,20 @@
-\chapter{Conclusion and Future Work}
+\chapter{Conclusion}
+\label{ch:conclusion}
 
-The project's conclusions should list the key things that have been learnt as a consequence of engaging in your project work. For example, ``The use of overloading in C++ provides a very elegant mechanism for transparent parallelisation of sequential programs'', or ``The overheads of linear-time n-body algorithms makes them computationally less efficient than $O(n \log n)$ algorithms for systems with less than 100000 particles''. Avoid tedious personal reflections like ``I learned a lot about C++ programming...'', or ``Simulating colliding galaxies can be real fun...''. It is common to finish the report by listing ways in which the project can be taken further. This might, for example, be a plan for turning a piece of software or hardware into a marketable product, or a set of ideas for possibly turning your project into an MPhil or PhD.
+Targeting the LLVM as a backend for a functional language compiler has proven to be an effective
+method for generating efficient machine cbde. The LLVM IR provides a low-level representation of
+programs that can be optimised and compiled to a variety of architectures, without the need for the
+compiler to target each architecture individually. Despite the complex transformations required to
+compile functional langauge paradigms into imperative machine code, the SSA form of LLVM IR provides
+a suitable target for this transformation.
+
+Performance of the generated code was on par with that of the Clang compiler, with the LLVM
+toolchain providing a number of optimisations that could be applied to the generated IR, such as
+dead code elimination, loop unrolling, and inlining. These optimisations came at no additional cost
+to the complexity of the compiler, with the LLVM toolchain providing these features out of the box.
+Any future improvements to the LLVM optimiser would be inherited by the compiler, providing a
+significant advantage over other compilation methods. Key features of functional languages, such as
+recursion, can be efficiently compiled to LLVM IR, with the LLVM backend providing the optimisations
+required to ensure the usage of such features are viable in practice.
+
+
