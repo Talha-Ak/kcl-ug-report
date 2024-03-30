@@ -1,4 +1,5 @@
 \chapter{Implementation}
+\label{ch:implementation}
 
 This chapter details the implementation of the compiler, with the first few sections covering all
 major phases from parsing to LLVM IR generation. Where appropriate, examples of how the language is
@@ -126,7 +127,7 @@ parsed output and applies the left-associative transformation. The implementatio
 To parse the source file as a whole, the file is converted into a String, and passed to the parser
 via the \mintinline{scala}{fastparse.parse(string, parser)} function. If the parser is successful,
 the AST is returned, otherwise an error message is printed. As mentioned in
-Chapter~\ref{sec:design}, care was taken to ensure the grammar created was unambiguous and not
+Chapter~\ref{ch:design}, care was taken to ensure the grammar created was unambiguous and not
 left-recursive. The final language grammar specification is available in Appendix~\ref{app:grammar}.
 
 \section{IR Generation}
@@ -590,7 +591,7 @@ the \texttt{Point} struct, the following LLVM IR is generated:
 
 \section{Closures and Higher-order functions}
 
-As mentioned in Chapter~\ref{sec:design}, there are three steps to implementing closures and
+As mentioned in Chapter~\ref{ch:design}, there are three steps to implementing closures and
 higher-order functions:
 
 \begin{enumerate}
