@@ -296,6 +296,11 @@ a value of type \texttt{Foo} would require branching on the tag, bitcasting the 
 appropriate variant type depending on the tag, and then extracting the data from the appropriate
 fields.
 
+Pattern matching on sum types would also require an implementation of a more complex algorithm that
+binds variables to the data associated with each variant. An ML style pattern matching
+implementation as seen in \autocite{jacobs2021pattern} would be suitable, as it utilises a heuristic
+to avoid generating redundant branches.
+
 As can be seen, implementing sum types is not trivial, and would not only require a refactor of the
 code generation phase, but also a redesign of the type system to support the additional complexity
 of sum types.
