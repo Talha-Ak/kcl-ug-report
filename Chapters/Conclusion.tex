@@ -3,10 +3,10 @@
 
 Targeting the LLVM as a backend for a functional language compiler has proven to be an effective
 method for generating efficient machine code. The LLVM IR provides a low-level representation of
-programs that can be optimised and compiled to a variety of architectures, without the need for the
-compiler to target each architecture individually. Despite the complex transformations required to
-compile functional langauge paradigms into imperative machine code, the SSA form of LLVM IR provides
-a suitable target for this transformation.
+programs that can be compiled to a variety of architectures, without the need for the compiler to
+target each architecture individually. Despite the complex transformations required to compile
+functional language paradigms into imperative machine code, the SSA form of LLVM IR provides a
+suitable target for this transformation.
 
 Performance of the generated code was on par with that of the Clang compiler, with the LLVM
 toolchain providing a number of optimisations that could be applied to the generated IR, such as
@@ -14,7 +14,17 @@ dead code elimination, loop unrolling, and inlining. These optimisations came at
 to the complexity of the compiler, with the LLVM toolchain providing these features out of the box.
 Any future improvements to the LLVM optimiser would be inherited by the compiler, providing a
 significant advantage over other compilation methods. Key features of functional languages, such as
-recursion, can be efficiently compiled to LLVM IR, with the LLVM backend providing the optimisations
-required to ensure the usage of such features are viable in practice.
+recursion, can be efficiently compiled to LLVM IR, with the LLVM backend providing the tail call
+optimisation necessary to prevent stack overflows.
 
+The LLVM IR provides a portable target for functional language compilers, with the ability to target
+a variety of architectures and operating systems. The LLVM project is actively maintained and
+developed, with a large community of contributors and users. This ensures that the LLVM IR will
+remain a viable target for compilers in the future, with new features and optimisations being added
+regularly.
 
+Areas of improvement for this compiler lie in an improved type system, with the ability to handle
+more complex types such as algebraic data types and type classes. As discussed in
+Chapter~\ref{ch:evaluation}, the current type system is limited in its expressiveness. Improvements
+to the type system would allow for more complex programs to be compiled, with the ability to handle
+more advanced features of functional languages.
