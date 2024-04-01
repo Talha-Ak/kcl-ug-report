@@ -9,73 +9,79 @@ The functional language should be able to express and support the following conc
 examples):
 
 \begin{itemize}
-      \item \textbf{Arithmetic} and \textbf{Boolean} expressions \\
-            (Operator precedence and associativity must be respected.)
-            \begin{code}{scala}
-                  1 + 2 * 3 < 4 && 5 >= 6
-            \end{code}
+    \item \textbf{Arithmetic} and \textbf{Boolean} expressions \\
+          (Operator precedence and associativity must be respected.)
+          \begin{code}{scala}
+              1 + 2 * 3 < 4 && 5 >= 6
+          \end{code}
 
-      \item \textbf{Variable Bindings}
-            \begin{code}{scala}
-                  val x = 1; val y = 2; val z = x + y
-            \end{code}
+    \item \textbf{Variable Bindings}
+          \begin{code}{scala}
+              val x = 1; val y = 2; val z = x + y
+          \end{code}
 
-      \item \textbf{If} expressions with optional else clauses \\
-            (Care must be taken to avoid the dangling else problem.)
-            \begin{code}{scala}
-                  if (x < 0) 0 else x
-            \end{code}
+    \item \textbf{If} expressions with optional else clauses \\
+          (Care must be taken to avoid the dangling else problem.)
+          \begin{code}{scala}
+              if (x < 0) 100 else if (x > 0) -100 else 50
+          \end{code}
 
-      \item \textbf{Printing} to the console
-            \begin{code}{scala}
-                  printStr("Hello, World!")
-            \end{code}
+    \item \textbf{Printing} to the console
+          \begin{code}{scala}
+              print(9 * (5 + 3))
+          \end{code}
 
-      \item \textbf{Functions} and \textbf{Function Application}
-            \begin{code}{scala}
-                  def foo(x: Int, y: Int): Int = x + y;
-                  foo(1, 2)
-            \end{code}
+    \item \textbf{Functions} and \textbf{Function Application}
+          \begin{code}{scala}
+              def foo(x: Int, y: Int): Int = x + y;
+              foo(1, 2)
+          \end{code}
 
-      \item \textbf{Higher-Order Functions} (i.e. functions that take other functions as arguments)
-            \begin{code}{scala}
-                  def foo(f: Int => Int, x: Int): Int = f(x);
-                  def bar(x: Int): Int = x + 1;
-                  foo(bar, 1)
-            \end{code}
+    \item \textbf{Higher-Order Functions} (i.e. functions that take other functions as arguments)
+          \begin{code}{scala}
+              def apply(f: Int => Int, x: Int): Int = f(x);
+              def increment(x: Int): Int = x + 1;
+              apply(increment, 1)
+          \end{code}
 
-      \item Basic atomic \textbf{Types}
-            (e.g. \mintinline{scala}{Int}, \mintinline{scala}{Bool}, \dots)
-            \begin{code}{scala}
-                  val x: Int = 1; val y: Bool = true
-            \end{code}
+    \item \textbf{Closures} (i.e. functions that capture variables from their surrounding scope)
+          \begin{code}{scala}
+                def makeIncrementer(x: Int): Int => Int = {
+                    def incrementer(y) = x + y;
+                    incrementer
+                }
+                val incrementBy5 = makeIncrementer(5);
+                incrementBy5(10)
+          \end{code}
 
-      \item A basic form of \textbf{Pattern Matching} on \textbf{Enumerated Types}
-            (May be extended to work on Abstract Data Types if time permits)
-            \begin{code}{scala}
-                  enum Priority {
-                              case Low
-                              case Medium
-                              case High
-                        };
+    \item Basic atomic \textbf{Types}
+          (e.g. \mintinline{scala}{Int}, \mintinline{scala}{Bool}, \mintinline{scala}{Float}, \dots)
+          \begin{code}{scala}
+              val x: Int = 1; val y: Bool = true
+          \end{code}
 
-                  def foo(p: Priority): Int = p match {
-                              case Low => 1
-                              case Medium => 2
-                              case High => 3
-                        }
-            \end{code}
+    \item User-defined \textbf{Structure Types}
+          \begin{code}{scala}
+              type Point = { x: Int, y: Int };
+              val p: Point = { x = 1, y = 2 }
+          \end{code}
 
+    \item A basic form of \textbf{Pattern Matching} on \textbf{Enumerated Types}
+          \begin{code}{scala}
+              enum Priority = Low | Medium | High;
+
+              def foo(p: Priority): Int = p match {
+                  case Low => 1
+                  case Medium => 2
+                  case High => 3
+              }
+          \end{code}
 \end{itemize}
 
 The compiler should be able to take a program written in this language and produce the semantically
-equivalent LLVM IR. The conversion should be performed via the following steps:
+equivalent LLVM IR.
 
-\begin{enumerate}
-      \item Parsing the source program into an Abstract Syntax Tree (AST).
-      \item Transforming the AST into an appropriate intermediate representation (IR).
-      \item Applying relevant transformations (e.g.,\ closure conversion, hoisting, de-sugaring,
-            \dots) to the IR.
-      \item Converting the intermediate representation into LLVM IR.
-\end{enumerate}
-
+The emitted LLVM IR should be compiled and executed using the LLVM toolchain. If possible, this
+should result in the final compiler being able to compile to multiple target architectures, such as
+x86 and ARM. Access to the LLVM toolchain should also provide the ability to apply various
+optimisations to the generated LLVM IR without the need to implement them manually.
