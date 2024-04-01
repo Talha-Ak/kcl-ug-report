@@ -6,7 +6,7 @@ major phases from parsing to LLVM IR generation. Where appropriate, examples of 
 represented at each stage of the compilation process will be provided. The final sections of this
 chapter will specifically cover the implementation and handling of structs, closures and
 higher-order functions, as these language features first require the full understanding of the
-implementation to be explained effectively.
+implementation in order to be explained effectively.
 
 \section{Parsing}
 
@@ -181,7 +181,7 @@ under an ANF expression. A simplified version of the CPS function is as follows:
         ...
         // Other expressions are handled by creating a new continuation function
         case Op(e1, o, e2) => {
-            val z = Fresh("tmp")
+            val z = counter.Fresh("tmp")
             CPS(e1)((y1) =>
                 CPS(e2)((y2) =>
                     KLet(z, Kop(o, y1, y2), k(KVar(z)))
@@ -197,7 +197,7 @@ under an ANF expression. A simplified version of the CPS function is as follows:
 \end{code}
 
 The \texttt{Fresh} function is used to generate a globally unique name for each temporary variable
-introduced, in order to fulfill the SSA requirements that LLVM IR has.
+introduced, in order to fulfil the SSA requirements that LLVM IR has.
 
 For a cleaner function interface (and to hide the implementation detail of the continuation), the
 CPS function is wrapped in a higher-order function that takes the AST expression, which calls the
@@ -208,7 +208,8 @@ CPS function with the AST and a continuation that binds the final result to a re
 As the LLVM IR is statically typed, the ANF IR to be generated must also be typed. While more
 complex type systems exist, such as Hindley-Milner type inference, the type system used in this
 project heavily leans on the existing type system of LLVM IR, with the programmer being required to
-annotate the types of variables at declaration.
+declare the types of variables alongside their definitions. This is done by adding type hints to
+variable definitions, function arguments and return types.
 
 If the type hint specified by the programmer is outside the set of pre-defined types in the language
 (e.g. \texttt{Int}, \texttt{Float}, etc.), the type is marked in the parser as a user-defined type
@@ -234,7 +235,7 @@ an updated version of the CPS function that includes type propagation is as foll
         ...
         // Other expressions are handled by creating a new continuation function
         case Op(e1, o, e2) => {
-            val z = Fresh("tmp")
+            val z = counter.Fresh("tmp")
             CPS(e1, ty)((y1, t1) =>
                 CPS(e2, t1)((y2, t2) =>
                     KLet(z, Kop(o, y1, y2), k(KVar(z, y1.get_type), t2))
@@ -428,15 +429,15 @@ language.
         case KFun(fnName, args, ret, body, next) => {
             val (fns, e, envs, structs) = hoist(body)
             val (fns2, e2, envs2, structs2) = hoist(next)
-            val entry = Fresh("entry")
+            val entry = counter.Fresh("entry")
             val fn = CFunc(fnName, args, ret, e)
             (fn :: fns ::: fns2, e2, envs ::: envs2, structs ::: structs2)
         }
         case KIf(x1, e1, e2) => {
             val (fns, t, envs, structs) = hoist(e1)
             val (fns2, f, envs2, structs2) = hoist(e2)
-            val thn = Fresh("then")
-            val els = Fresh("else")
+            val thn = counter.Fresh("then")
+            val els = counter.Fresh("else")
             (fns ::: fns2, KIf(x1, t, f), envs ::: envs2, structs ::: structs2)
         }
         case KLetEnv(x, env: Env, next) => {
@@ -700,7 +701,7 @@ the closure.
                 .filterNot(x => args.map(_._1).contains(x.s)).toList
             ...
             // Create environment
-            val envId = Fresh("env")
+            val envId = counter.Fresh("env")
             val newArgs = (envId, EnvType(envId)) +: args
             val newRet = if next_env.isEmpty then ret else EnvType(next_env.get.name)
             val newType = FnType(newArgs.map(_._2), newRet)

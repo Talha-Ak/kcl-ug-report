@@ -68,7 +68,8 @@ program optimisations within appropriate phases.
 As an example, the Glasgow Haskell Compiler (GHC) makes use of ten mandatory compiler phases
 \autocite{ghccompiler}. However, most phases within the GHC are intentionally simple
 transformations, leaving the majority of the optimisations to a specific single phase between the
-frontend and code generation \autocite{jones1997transformation}.
+frontend and code generation. Additionally, the GHC is able to select multiple backend targets,
+including a C subset, LLVM, and native code generation~\autocite{jones1997transformation}.
 
 \subsection{Lexical Analysis}
 
@@ -118,13 +119,14 @@ functions that can be used to construct and combine parsers. These combinators p
 modularity than recursive descent parsers, as well as the ability to construct parsers that are more
 expressive than those that can be constructed by recursive descent.
 
-% The above example could be represented by the following parse tree:
+\subsection{Intermediate Code Generation}
 
-% \begin{figure}[H]
-% \centering
-% \includestandalone[width=0.5\textwidth]{Graphics/parse-tree}
-% \caption{Parse tree for the example code.}
-% \label{fig:parse-tree}
+The intermediate code generation phase is responsible for converting the AST produced by the syntax
+analysis phase into an intermediate representation (IR) that is closer to the target language. This
+IR is typically a low-level representation that is easier to optimise and convert into machine code
+than the original source code. The IR is also used to decouple the frontend from the backend of the
+compiler, allowing for platform-generic optimisations to be implemented, as well as facilitating the
+reuse of the frontend when targeting different platforms.
 
 \section{LLVM IR}
 
@@ -132,28 +134,37 @@ The LLVM project is an open-source collection of tools and libraries for the con
 compilers and related programming tools, the core of which revolves around the LLVM intermediate
 representation (LLVM IR). This IR is low-level enough to be used as a target for compilers from
 which an LLVM backend can generate machine code, while also being high-level enough to be used as a
-portable assembly language targeting a variety of architectures.
+portable assembly language targeting a variety of architectures. While originally designed as a
+target for compiling C and C++ programs, LLVM has since been used as a backend for a variety of
+languages, including Rust, Swift, and Haskell.
 
-From its inception, the IR was defined to be represented in Static Single Assignment (SSA) form
+From its inception, the IR was designed to be represented in Static Single Assignment (SSA) form
 \autocite{lattner2004llvm}, restricting the IR such that each variable must be assigned to exactly
 once before usage, and cannot be reassigned. This restriction alone would imply that purely
 functional languages could be represented in SSA form, as these languages enforce immutability.
-However, the SSA used in LLVM IR also enforces that expressions be atomic, akin to assembly
-instructions. The effect of this is that the program flow is made explicit, simplifying
+However, the SSA used in LLVM IR also enforces that expressions be atomic, with functions being
+strictly applied to only variables or constants, akin to assembly instructions. The effect of this
+is that the evaluation order of expressions and program flow is made explicit, simplifying
 optimisations such as dead code elimination and constant propagation.
 
 For instance, the following Scala code:
 
 \begin{code}{scala}
-    def foo(x: Int, y: Int): Int = (x + y) * x
+    def foo(x: Int, y: Int): Int = x + y * x
 \end{code}
 
 could be converted into the following LLVM IR:
 
 \begin{code}{llvm}
     define i32 @foo(i32 %x, i32 %y) {
-        %add = add i32 %x, %y
-        %mul = mul i32 %add, %x
-        ret i32 %mul
+        %mul = mul i32 %y, %x
+        %add = add i32 %x, %mul
+        ret i32 %add
     }
 \end{code}
+
+Observe that the arithmetic order of operations is made explicit in the LLVM IR, with the
+multiplication of \texttt{\%y} and \texttt{\%x} being computed before the addition of \texttt{\%x}
+and \texttt{\%mul}. This explicitness allows for the compiler to reorder instructions and perform
+optimisations that would not be possible in the original source code.
+
