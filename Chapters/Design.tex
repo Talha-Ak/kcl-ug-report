@@ -2,7 +2,24 @@
 \label{ch:design}
 
 Mirroring the convention for modern compilers, the compiler will be implemented with distinct phases
-for each major transformation step outlined in the requirements. This is illustrated in
+for each major transformation step outlined in the requirements. This clear separation of concerns
+allows for each phase to be developed and tested independently, and for the compiler to be easily
+extended or modified in the future. The phases are as follows:
+
+\begin{enumerate}
+      \item \textbf{Parsing}: Responsible for transforming the source code into an Abstract Syntax
+            Tree (AST).
+      \item \textbf{IR Generation}: Transforms the AST into an intermediate representation (IR)
+            based on Administrative Normal Form (ANF).
+      \item \textbf{Closure Conversion}: Converts the IR into a form that supports higher-order
+            functions by introducing closures.
+      \item \textbf{Hoisting}: Hoists nested functions and other declarations to the top-level
+            global scope.
+      \item \textbf{LLVM Generation}: Generates the LLVM IR from the ANF IR, and any additional
+            runtime functions required.
+\end{enumerate}
+
+This is illustrated in
 Figure~\ref{fig:project-compiler-spec}.
 
 \begin{figure}
@@ -25,70 +42,132 @@ correct, as well as for identifying any regressions in the compiler's behaviour.
 
 The LLVM static compiler \texttt{llc} will be used to generate the object file required for linking
 the final executable with \texttt{gcc}. Using \texttt{llc} provides access to the same compiler
-optimisations as seen in \texttt{clang} (i.e., \texttt{-O1, -02, -03}), negating the need for
-implementing certain optimisations within the compiler itself.
+optimisations as seen in \texttt{clang} (i.e., \texttt{-O1, -02, -03}) and other compilers that
+utilise the LLVM optimiser, negating the need for implementing certain optimisations within the
+compiler itself.
 
 \section{Compiler Phases}
 
-\subsection{Parser}
+\subsection{Parsing}
 
 This phase is responsible for transforming the stream of characters from a source file into an AST.
 The implementation will be carried out using \emph{FastParse}, a parser combinator library for
 Scala. This decision was motivated by the library's parsing performance in comparison to other
 parser libraries, extensive tooling for debugging and testing, in addition to its judicious use of
 Scala's language features. This results in a syntax for defining parsers that is modular and simple
-to reason about.
+to reason about. An advantage of using a parser combinator library is that it allows for the
+implementation to closely resemble the grammar of the language being parsed, making it easier to
+maintain and extend the parser.
 
-The trade-off when using \emph{FastParse} is that it operates directly with the stream of characters,
-rather than a stream of tokens (known as \emph{scannerless parsing}). This means that the lexical
-analysis phase will be omitted, with the parser responsible for identifying tokens.
+The trade-off when using \emph{FastParse} is that it operates directly with the stream of
+characters, rather than a stream of tokens (known as \emph{scannerless parsing}). Therefore, the
+lexical analysis phase will be omitted, with the parser responsible for identifying tokens.
 
 The context-free grammar used by the parser must be unambiguous, and
 (particularly for arithmetic and boolean expressions) correctly reflect the precedence and
 associativity of operators. While technically possible for parser combinators to handle
-these grammars \autocite{frost2008recursiveparsers}, the \emph{FastParse} library does not.
+ambiguous grammars \autocite{frost2008recursiveparsers}, the \emph{FastParse} library does not.
 
+\subsection{IR Generation}
 
-(Language BNF to be included here (or in appendix? implementation?))
+As the LLVM IR is specified to be in SSA form, compilers targeting the LLVM IR must convert their
+programs into SSA form before generating LLVM IR. For functional languages, it is useful to convert
+to another intermediate representation that is close to SSA form before converting to LLVM IR.
 
-\subsection{IRGen}
+Two such intermediate representations commonly used for compiling functional languages are:
+\begin{itemize}
+    \onehalfspacing
+    \item \textbf{Continuation-Passing Style}
+    \item \textbf{A-Normal Form}
+\end{itemize}
 
-The resulting AST from the parser will be transformed into an intermediate representation (IR),
-based on ANF. ANF-form was selected over CPS-form due to its ease in converting to the eventual LLVM
-IR.
+These specific representations were chosen as they both have been demonstrated to map closely to
+lambda calculus \autocite{morrisett1999systemf,flanagan1993essence}, making them ideal for
+representing functional languages.
+
+\subsubsection{Continuation-Passing Style}
+\label{sec:cps}
+
+Continuation-Passing Style (CPS) refers to a programming style where, instead of function
+invocations returning a value, functions instead invoke a continuation function with the value as
+an argument.
+
+For instance, the following Scala expression:
+
+\begin{code}{scala}
+    foo(1, 2) + bar(3, 4)
+\end{code}
+
+\noindent could be converted into the following CPS:
+
+\begin{code}{scala}
+    // foo and bar accept and return additional continuation function arg
+    foo(1, 2,
+        (a) => bar(3, 4,
+            (b) => a + b
+        )
+    )
+\end{code}
+
+\noindent where \texttt{k} represents the continuation.
+
+While not identical to SSA, it has been proven that a subset of CPS is equivalent to SSA, and this
+subset is sufficient for use as an intermediate representation \autocite{kelsey1993correspondence}.
+
+\subsubsection{A-Normal Form}
+
+A simpler, more compact IR is Administrative Normal Form (ANF), referring to a programming style
+where all expressions are either variables or function calls with atomic arguments.
+
+For instance, the same Scala code from Section~\ref{sec:cps} could be converted into the following
+ANF code:
+
+\begin{code}{Scala}
+    val a = foo(1, 2)
+    val b = bar(3, 4)
+    a + b
+\end{code}
+
+For the project, the resulting AST from the parser will be transformed into an intermediate
+representation (IR), based on ANF. An ANF IR was selected over a CPS IR due to its ease in
+converting to the eventual LLVM IR.
 
 Within this phase, enumerated types are also de-sugared into integer constants, and pattern matching
-is de-sugared into a series of \texttt{if} statements. (To be extended if time permits.)
+is de-sugared into a series of \texttt{if} statements.
 
-(Again, language of IR to be included here (or in appendix? implementation?))
-
-
-\subsection{ClosureConv}
+\subsection{Closure Conversion}
 
 Supporting higher-order functions requires the introduction of closures, due to the need to capture
 free variables (variables that are not defined within the function) present inside a function. This
 phase is done in multiple steps:
 
 \begin{enumerate}
-      \item \textbf{Identify free variables} - Free variables are identified by
-            analysing variables used but not declared within a function.
+      \item \textbf{Identify free variables}: Free variables are identified by analysing variables
+            used but not declared within a function.
 
-      \item \textbf{Closure Conversion} - An additional \emph{environment} parameter is added to the
-            function, containing the free variable values. Any reference to the free variables
-            within the function body are then modified to reference the captured variables in the
-            environment.
+      \item \textbf{Create closure}: A closure is created for each function that contains free
+            variables. This closure is a structure that contains a pointer to the function, and the
+            values of the free variables.
 
-            Any returns of the function are re-written to return a tuple containing a pointer to the
-            function, and the environment. Calls to the function are re-written to extract the
-            function pointer from the tuple, and pass the environment as an additional parameter.
+      \item \textbf{Rewrite body}: The body of the function is rewritten to reference the free
+            variables from the closure, rather than the original free variables.
 
-      \item \textbf{Hoisting} - Functions are hoisted to the top-level global scope, removing any
-            nested functions prior to code generation.
+      \item \textbf{Rewrite calls}: Calls to the function are rewritten to pass the closure as an
+            additional parameter. The function pointer is extracted from the closure, and the
+            function is called with the environment as an additional parameter.
 \end{enumerate}
 
-\subsection{LLVMGen}
+\subsection{Hoisting}
+
+Hoisting is the process of moving nested functions and other declarations to the top-level global
+scope. This ensures that all declarations are visible to the entire program, and that functions can
+be called from anywhere in the program. This is necessary for the LLVM IR, as functions must be
+declared before they are called.
+
+\subsection{LLVM Generation}
 
 This final phase is responsible for traversing the ANF IR and generating the corresponding LLVM IR.
 Any additional runtime functions required for supporting the language features are also generated
 within this phase, such as functions to \texttt{print()}. It is imperative that the type information
-from the source language is preserved up to this point, as the LLVM IR is strongly typed.
+from the source language is preserved up to this point, as the LLVM IR is strongly typed. The
+generated LLVM IR is then written to a file, ready for compilation with \texttt{llc}.
