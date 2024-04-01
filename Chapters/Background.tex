@@ -1,6 +1,49 @@
 \chapter{Background}
 \label{ch:background}
 
+\section{Functional Programming}
+
+Functional programming languages are characterised by the use of first-class functions, higher-order
+functions, and the use of recursion instead of loops. These languages are also typically
+\emph{referentially transparent}, meaning that the same function call with the same arguments will
+always return the same result, regardless of the context in which it is called. This category
+of languages can be seen as the application of mathematical functions to programming, with the
+language's syntax and semantics being inspired by lambda calculus.
+
+\subsection{Lambda Calculus}
+
+Lambda calculus is a formal system for expressing computation based on function abstraction and
+application using variable binding and substitution. The system was introduced by Alonzo Church in
+the 1930s as a way to formalise the notion of computability, and has since been used as a foundation
+for the design of functional programming languages. The understanding of proceedural languages could
+also be seen in terms of lambda calculus~\autocite{landin1965lambda}. The core of lambda calculus
+consists of three elements:
+
+\begin{itemize}
+    \onehalfspacing
+    \item \textbf{Variables}: Representations of values that can be passed to functions.
+    \item \textbf{Abstraction}: The process of defining a function by specifying its arguments and
+          body.
+    \item \textbf{Application}: The process of applying a function to an argument.
+\end{itemize}
+
+For instance, the lambda calculus expression \(\lambda x. x + 1\) represents a function that takes
+an argument \(x\) and returns \(x + 1\). By nesting lambda abstractions, more complex functions can
+be defined. For example, the expression \(\lambda x. \lambda y. x + y\) represents a function that
+takes two arguments and returns their sum.
+
+The lambda calculus has the notion of \emph{free} and \emph{bound} variables, where a variable is
+bound if it is within the scope of a lambda abstraction, and free otherwise. A function that
+contains no free variables are known to be \emph{closed}.
+
+Expressions that are open cannot be evaluated, as they are not fully defined. For instance, the
+expression \((\lambda y. x + y)\) is not closed, as the variable \(x\) is free. However, if we
+define \(x\) as a constant, or supplied the value of \(x\) in it's enclosing environment, the
+expression would be closed and therefore evaluable. A similar concept is seen in programming
+languages, where functions that reference variables outside their scope are known as
+\emph{closures}. These functions are able to capture the environment in which they were defined and
+can be passed around as first-class values.
+
 \section{The Compiler Pipeline}
 
 Compilers play the role of converting a program written in a given programming language into a
@@ -113,71 +156,4 @@ could be converted into the following LLVM IR:
         %mul = mul i32 %add, %x
         ret i32 %mul
     }
-\end{code}
-
-\section{SSA Conversion Methods}
-
-As the LLVM IR is specified to be in SSA form, compilers targeting the LLVM IR must convert their
-programs into SSA form before generating LLVM IR. For functional languages, it is useful to convert
-to another intermediate representation that is close to SSA form before converting to LLVM IR.
-
-The following intermediate representations will be considered for this report:
-\begin{itemize}
-    \onehalfspacing
-    \item \textbf{Continuation-Passing Style}
-    \item \textbf{A-Normal Form}
-\end{itemize}
-
-These specific representations were chosen as they both have been demonstrated to map closely to
-lambda calculus \autocite{morrisett1999systemf,flanagan1993essence}, making them ideal for
-representing functional languages.
-
-\subsection{Continuation-Passing Style}
-\label{sec:cps}
-
-Continuation-Passing Style (CPS) refers to a programming style where, instead of function
-invocations returning a value, functions instead invoke a continuation function with the value as
-an argument.
-
-% Continuation-Passing Style (CPS) is a style of programming where the evaluation of a function is
-% represented as a function that takes a continuation as an argument \autocite{danvy1992intensions}.
-% This style of programming is useful for compilers, as it allows for the representation of
-% expressions in a way that is similar to the way that the stack is used during execution. This is
-% because the continuation represents the rest of the computation that needs to be performed after
-% the current expression is evaluated.
-
-For instance, the following Scala expression:
-
-\begin{code}{scala}
-    foo(1, 2) + bar(3, 4)
-\end{code}
-
-\noindent could be converted into the following CPS:
-
-\begin{code}{scala}
-    // foo and bar accept and return additional continuation function arg
-    foo(1, 2,
-        (a) => bar(3, 4,
-            (b) => a + b
-        )
-    )
-\end{code}
-
-\noindent where \texttt{k} represents the continuation.
-
-While not identical to SSA, it has been proven that a subset of CPS is equivalent to SSA, and this
-subset is sufficient for use as an intermediate representation \autocite{kelsey1993correspondence}.
-
-\subsection{A-Normal Form}
-
-A simpler, more compact IR is Administrative Normal Form (ANF), referring to a programming style
-where all expressions are either variables or function calls with atomic arguments.
-
-For instance, the same Scala code from Section~\ref{sec:cps} could be converted into the following
-ANF code:
-
-\begin{code}{Scala}
-    val a = foo(1, 2)
-    val b = bar(3, 4)
-    a + b
 \end{code}
