@@ -68,6 +68,11 @@ recursive functions. A pure functional language paradigm will utilise recursion 
 of iteration, as opposed to the traditional imperative loop constructs. Therefore, the ability for a
 compiler to optimise recursive functions is crucial for the performance of the generated code.
 
+To evaluate the performance of the project compiler, two recursive functions were chosen for
+benchmarking: the Ackermann function and the Fibonacci function.
+
+\subsection{Ackermann Function}
+
 The Ackermann function is a recursive computable function that grows rapidly with respect to its
 inputs, and is a classic example used to benchmark the ability of a compiler to optimise recursive
 calls.
@@ -91,19 +96,6 @@ that the output value of the function is indicative of the running time of the f
 Without proper optimisation, the Ackermann function can quickly exhaust the call stack, and result
 in a stack overflow error. For evaluation purposes, the Ackermann function will be tested with $m=3$
 to restrict function growth to (at most) exponential.
-
-To properly evaluate the performance of the project compiler, the generated LLVM IR code was
-compiled to a binary using the LLVM compiler (\texttt{llc}), and then linked against the C standard
-library \texttt{libc} using the GNU Compiler Collection (\texttt{gcc}). Linking against
-\texttt{libc} is necessary to provide the required \texttt{printf} function for output, as it not
-defined in the LLVM. The resulting binary was then executed to measure the time taken to compute the
-Ackermann function for various values of $n$.
-
-The project compiler was benchmarked against Haskell (compiled with GHC), and C (compiled with
-Clang). Haskell was chosen as a comparison due to its functional programming nature that has a
-compiler compatible with the LLVM backend. C was chosen due to its high performance, and high
-compatibility with the LLVM. (The LLVM was originally developed for C and C++ in
-mind.~\autocite{lattner2004llvm})
 
 Below is the implementation of the Ackermann function in all three languages:
 
@@ -165,57 +157,221 @@ Below is the implementation of the Ackermann function in all three languages:
 \end{tcbitemize}
 \vspace{0.4cm}
 
+\subsection{Fibonacci Function}
+
+Another recursive function that will be tested is the Fibonacci function, defined as follows:
+
+\singlespacing
+\vspace{-0.7cm}
+\begin{align*}
+    fib(n) = \begin{cases}
+        0 & \text{if } n = 0 \\
+        1 & \text{if } n = 1 \\
+        fib(n - 1) + fib(n - 2) & \text{if } n > 1
+    \end{cases}
+\end{align*}
+\doublespacing
+
+The Fibonacci function is a classic example of a recursive function that, while not as
+computationally intensive as the Ackermann function, is still a good benchmark for evaluating the
+performance of a compiler when generating code for recursive functions.
+
+Below is the implementation of the Fibonacci function in all three languages:
+
+\vspace{0.3cm}
+\begin{tcbitemize}[raster columns=3, raster equal height=rows,size=small,space to upper]
+    \tcbitem
+        \footnotesize
+        \begin{minted}{scala}
+            def fib(n: Int): Int =
+                if n == 0 then
+                    0
+                else if n == 1 then
+                    1
+                else
+                    fib(n-1) + fib(n-2);
+
+            def main() = {
+                print(fib(40))
+                0
+            }
+        \end{minted}
+        \tcblower
+        \footnotesize $fib(n)$ in the project.
+    \tcbitem
+        \footnotesize
+        \begin{minted}{haskell}
+            fib :: Int -> Int
+            fib 0 = 0
+            fib 1 = 1
+            fib n = fib (n-1) + fib (n-2)
+
+            main = print (fib 40)
+        \end{minted}
+        \vfill
+        \tcblower
+        \footnotesize $fib(n)$ in Haskell.
+    \tcbitem
+        \scriptsize
+        \begin{minted}{c}
+            #include <stdio.h>
+
+            int fib(int n) {
+                if (n == 0) {
+                    return 0;
+                } else if (n == 1) {
+                    return 1;
+                } else {
+                    return fib(n-1) + fib(n-2);
+                }
+            }
+
+            int main() {
+                printf("%d\n", fib(40));
+                return 0;
+            }
+        \end{minted}
+        \tcblower
+        \footnotesize $fib(n)$ in C.
+\end{tcbitemize}
+\vspace{0.4cm}
+
+\subsection{Benchmarking Methodology}
+
+To properly evaluate the performance of the project compiler, the generated LLVM IR code was
+compiled to a binary using the LLVM compiler (\texttt{llc}), and then linked against the C standard
+library \texttt{libc} using the GNU Compiler Collection (\texttt{gcc}). Linking against
+\texttt{libc} is necessary to provide the required \texttt{printf} function for output, as it not
+defined in the LLVM. The resulting binary was then executed to measure the time taken to compute
+both the Ackermann and Fibonacci functions for various values of $n$.
+
+The project compiler was benchmarked against Haskell (compiled with GHC), and C (compiled with
+Clang). Haskell was chosen as a comparison due to its functional programming nature that also has a
+compiler compatible with the LLVM backend. C was chosen due to its high performance, and high
+compatibility with the LLVM.
+
 To ensure a fair comparison, and to evaluate the effect of the LLVM toolchain on compiler frontends,
 all compilers were compiled at two optimisation levels: \texttt{-O0} and \texttt{-O3}. The
 \texttt{-O0} flag disables all optimisations, while the \texttt{-O3} flag enables all
 optimisations\footnote{The GHC compiler actually needs two flags to enable all optimisations; one
 for GHC (\texttt{-O2}), and one for the LLVM (\texttt{-optlc-O3}).}.
 
-Each compiler was benchmarked ten times with $ack(3,n)$ for each input value of $n$ (ranging from 10
-to 15 inclusive) across both optimisation levels, and the average time taken was recorded. Results
-were obtained on a machine with an Intel Core i7-13620H CPU and 32GB of RAM, running Ubuntu 22.04.4
-under WSL2. The results of the benchmark are shown in Table~\ref{tab:ackermann-benchmark}, and
-graphed in Figure~\ref{fig:ackermann-benchmark}.
+Each compiler was benchmarked across both optimisation levels (\texttt{-O0} and \texttt{-O3}). The
+Ackermann function was tested as $ack(3,n)$ with $n$ ranging from 10 to 15 inclusive, while the
+Fibonacci function was tested as $fib(n)$ with $n$ ranging from 40 to 45 inclusive. Each function
+was run ten times for each input value of $n$, and the average time taken was recorded.
 
+Results were obtained on a machine with an Intel Core i7-13620H CPU and 32 GB of RAM, running Ubuntu
+22.04.4 LTS under WSL2.
 
 \subsection{Results}
 
-\begin{table*}\centering
+\begin{table}%
+    \caption{Results for the Ackermann (left) and Fibonacci (right) functions (in seconds)}
+    \label{tab:benchmark-results}
     \renewcommand{\arraystretch}{1.3}
-    \label{tab:ackermann-benchmark}
-    \caption{Ackermann function benchmark results (in seconds)}
+    \makebox[1.05\textwidth][c]{%
+        \begin{minipage}{0.7\textwidth}%
+            \begin{tabular}{@{}lcccccccc@{}} \toprule
+                Lang        & \multicolumn{2}{c}{Project} &              & \multicolumn{2}{c}{C} &              & \multicolumn{2}{c}{Haskell}                                  \\
+                \cmidrule{2-3} \cmidrule{5-6} \cmidrule{8-9}
+                            & \texttt{-O0}                & \texttt{-O3} &                       & \texttt{-O0} & \texttt{-O3}                &  & \texttt{-O0} & \texttt{-O3} \\ \midrule
+                $ack(3,10)$ & 0.080                       & 0.024        &                       & 0.120        & 0.024                       &  & 1.334        & 0.101        \\
+                $ack(3,11)$ & 0.312                       & 0.093        &                       & 0.490        & 0.092                       &  & 5.449        & 0.387        \\
+                $ack(3,12)$ & 1.267                       & 0.370        &                       & 1.976        & 0.366                       &  & 22.63        & 1.578        \\
+                $ack(3,13)$ & 5.071                       & 1.502        &                       & 8.088        & 1.495                       &  & 99.05        & 6.540        \\
+                $ack(3,14)$ & 20.75                       & 6.193        &                       & 32.90        & 6.130                       &  & 475.3        & 28.08        \\
+                $ack(3,15)$ & --                          & 24.74        &                       & --           & 23.26                       &  & 2237         & 127.1        \\
+                \bottomrule
+            \end{tabular}%
+        \end{minipage}%
+        \begin{minipage}{0.7\textwidth}%
+            \begin{tabular}{@{}lcccccccc@{}} \toprule
+                Lang      & \multicolumn{2}{c}{Project} &              & \multicolumn{2}{c}{C} &              & \multicolumn{2}{c}{Haskell}                                  \\
+                \cmidrule{2-3} \cmidrule{5-6} \cmidrule{8-9}
+                          & \texttt{-O0}                & \texttt{-O3} &                       & \texttt{-O0} & \texttt{-O3}                &  & \texttt{-O0} & \texttt{-O3} \\ \midrule
+                $fib(40)$ & 0.713                       & 0.207        &                       & 0.428        & 0.206                       &  & 3.724        & 0.367        \\
+                $fib(41)$ & 1.152                       & 0.333        &                       & 0.705        & 0.335                       &  & 15.18        & 0.593        \\
+                $fib(42)$ & 1.867                       & 0.535        &                       & 1.112        & 0.532                       &  & 24.55        & 0.953        \\
+                $fib(43)$ & 3.019                       & 0.860        &                       & 1.804        & 0.874                       &  & 39.58        & 1.534        \\
+                $fib(44)$ & 4.870                       & 1.389        &                       & 2.925        & 1.388                       &  & 64.31        & 2.486        \\
+                $fib(45)$ & 7.878                       & 2.250        &                       & 4.767        & 2.262                       &  & 104.2        & 4.044        \\
+                \bottomrule
+            \end{tabular}%
+        \end{minipage}%
+    }%
+\end{table}
 
-    \begin{tabular}{@{}lcccccccc@{}} \toprule
-        Lang        & \multicolumn{2}{c}{Project} &              & \multicolumn{2}{c}{C} &              & \multicolumn{2}{c}{Haskell}                                  \\
-        \cmidrule{2-3} \cmidrule{5-6} \cmidrule{8-9}
-                    & \texttt{-O0}                & \texttt{-O3} &                       & \texttt{-O0} & \texttt{-O3}                &  & \texttt{-O0} & \texttt{-O3} \\ \midrule
-        $ack(3,10)$ & 0.080                       & 0.024        &                       & 0.120        & 0.024                       &  & 1.334        & 0.101        \\
-        $ack(3,11)$ & 0.312                       & 0.093        &                       & 0.490        & 0.092                       &  & 5.449        & 0.387        \\
-        $ack(3,12)$ & 1.267                       & 0.370        &                       & 1.976        & 0.366                       &  & 22.63        & 1.578        \\
-        $ack(3,13)$ & 5.071                       & 1.502        &                       & 8.088        & 1.495                       &  & 99.05        & 6.540        \\
-        $ack(3,14)$ & 20.75                       & 6.193        &                       & 32.90        & 6.130                       &  & 475.3        & 28.08        \\
-        $ack(3,15)$ & --                          & 24.74        &                       & --           & 23.26                       &  & 2237         & 127.1        \\
-        \bottomrule
-    \end{tabular}
-\end{table*}
+% \begin{table*}\centering
+%     \renewcommand{\arraystretch}{1.3}
+%     \label{tab:ackermann-benchmark}
+%     \caption{Ackermann function benchmark results (in seconds)}
 
-\begin{figure}[t]
-    \includegraphics{Graphics/ackermann-benchmark.pdf}
+%     \begin{tabular}{@{}lcccccccc@{}} \toprule
+%         Lang        & \multicolumn{2}{c}{Project} &              & \multicolumn{2}{c}{C} &              & \multicolumn{2}{c}{Haskell}                                  \\
+%         \cmidrule{2-3} \cmidrule{5-6} \cmidrule{8-9}
+%                     & \texttt{-O0}                & \texttt{-O3} &                       & \texttt{-O0} & \texttt{-O3}                &  & \texttt{-O0} & \texttt{-O3} \\ \midrule
+%         $ack(3,10)$ & 0.080                       & 0.024        &                       & 0.120        & 0.024                       &  & 1.334        & 0.101        \\
+%         $ack(3,11)$ & 0.312                       & 0.093        &                       & 0.490        & 0.092                       &  & 5.449        & 0.387        \\
+%         $ack(3,12)$ & 1.267                       & 0.370        &                       & 1.976        & 0.366                       &  & 22.63        & 1.578        \\
+%         $ack(3,13)$ & 5.071                       & 1.502        &                       & 8.088        & 1.495                       &  & 99.05        & 6.540        \\
+%         $ack(3,14)$ & 20.75                       & 6.193        &                       & 32.90        & 6.130                       &  & 475.3        & 28.08        \\
+%         $ack(3,15)$ & --                          & 24.74        &                       & --           & 23.26                       &  & 2237         & 127.1        \\
+%         \bottomrule
+%     \end{tabular}
+% \end{table*}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{Graphics/ackermann-benchmark.pdf}
     \caption{A graph reflecting the results of the Ackermann function benchmark.}
     \label{fig:ackermann-benchmark}
 \end{figure}
 
-The results show that, at optimisation level \texttt{-O0}, the
-project compiler performs significantly better than Haskell, and slightly better than C across all
-test cases.
+% \begin{table*}\centering
+%     \renewcommand{\arraystretch}{1.3}
+%     \label{tab:fibonacci-benchmark}
+%     \caption{Fibonacci function benchmark results (in seconds)}
 
-On analysing the generated LLVM IR code, Clang (at \texttt{-O0}) appears to copy all function
-arguments to the stack as local variables before using them, occurring for each function invocation.
-This results in many \texttt{alloca}, \texttt{store} and \texttt{load} instructions being called per
-function call. The project compiler, on the other hand, utilises the LLVM's SSA form to eliminate
-unnecessary memory operations, and instead uses the function arguments directly. This results in
-significantly fewer memory related instructions, and a more efficient program as reflected by the
-results.
+%     \begin{tabular}{@{}lcccccccc@{}} \toprule
+%         Lang        & \multicolumn{2}{c}{Project} &              & \multicolumn{2}{c}{C} &              & \multicolumn{2}{c}{Haskell}                                  \\
+%         \cmidrule{2-3} \cmidrule{5-6} \cmidrule{8-9}
+%                     & \texttt{-O0}                & \texttt{-O3} &                       & \texttt{-O0} & \texttt{-O3}                &  & \texttt{-O0} & \texttt{-O3} \\ \midrule
+%         $fib(40)$ & 0.713                       & 0.207        &                       & 0.428        & 0.206                       &  & 3.724        & 0.367        \\
+%         $fib(41)$ & 1.152                       & 0.333        &                       & 0.705        & 0.335                       &  & 15.18        & 0.593        \\
+%         $fib(42)$ & 1.867                       & 0.535        &                       & 1.112        & 0.532                       &  & 24.55        & 0.953        \\
+%         $fib(43)$ & 3.019                       & 0.860        &                       & 1.804        & 0.874                       &  & 39.58        & 1.534        \\
+%         $fib(44)$ & 4.870                       & 1.389        &                       & 2.925        & 1.388                       &  & 64.31        & 2.486        \\
+%         $fib(45)$ & 7.878                       & 2.250        &                       & 4.767        & 2.262                       &  & 104.2        & 4.044        \\
+%         \bottomrule
+%     \end{tabular}
+% \end{table*}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{Graphics/fibonacci-benchmark.pdf}
+    \caption{A graph reflecting the results of the Fibonacci function benchmark. Note the C and
+    Project compilers are identical at \texttt{-O3}.}
+    \label{fig:fibonacci-benchmark}
+\end{figure}
+
+The results of the benchmarks are shown in Table~\ref{tab:benchmark-results}, and graphed in
+Figures~\ref{fig:ackermann-benchmark} and~\ref{fig:fibonacci-benchmark} for the Ackermann and
+Fibonacci functions respectively.
+
+The results show that, at optimisation level \texttt{-O0}, the project compiler performs
+significantly better than Haskell, but is inconclusive when compared to C. For the Ackermann
+function, the project compiler consistently performs better than C across all inputs. However, the
+opposite is true for the Fibonacci function, where the project compiler consistently performs worse
+than C for all inputs.
+
+On analysing the generated LLVM IR code, Clang (with all optimisations disabled using \texttt{-O0})
+appears to copy all function arguments to the stack as local variables before using them, occurring
+for each function invocation. This results in many \texttt{alloca}, \texttt{store} and \texttt{load}
+instructions being called per function call. The project compiler, on the other hand, utilises the
+LLVM's SSA form to eliminate unnecessary memory operations, and instead uses the function arguments
+directly. This however does not explain the performance difference between the project compiler and
+C for the Fibonacci function and remains an area for further investigation.
 
 A common behaviour observed in both the project compiler and Clang is the failure to compute the
 Ackermann function for $ack(3,15)$, terminating with a segmentation fault. This is due to the
@@ -229,11 +385,11 @@ lack of a traditional call stack, Haskell is able to compute the Ackermann funct
 out of stack space.
 
 At optimisation level \texttt{-O3}, all compilers expectedly perform better than at \texttt{-O0},
-but at different rates. The project compiler sees approximately a 3.3x improvement in performance, C
-sees a 5x improvement, and Haskell sees a 14x improvement. The project compiler now performs almost
-identically with C for small inputs, slightly dropping off as $n$ increases. Haskell, however, still
-performs significantly worse than the other two compilers, as the GHC compiler appears to struggle
-optmising for this particular function.
+but at different rates. Haskell sees the most significant improvement, with both the Ackermann and
+Fibonacci functions being computed in a fraction of the time compared to \texttt{-O0}. The project
+compiler and Clang also see modest improvements, where they now both perform almost identically for
+all inputs. Haskell, however, still performs significantly worse than the other two compilers, as
+the GHC compiler appears to struggle optmising for this particular function.
 
 The generated LLVM IR code for the project compiler and Clang are now very similar, with both
 utilising tail call optimisation to reduce the number of recursive calls inside the Ackermann
@@ -242,10 +398,10 @@ required, and allows the function to be computed for larger inputs, such as $ack
 explains the very similar performance of the two compilers at \texttt{-O3}, as both compilers are
 able to leverage the LLVM's optimisation passes to generate efficient code.
 
-Despite primitive nature of the project compiler compared to other well-established compilers, the
-results of the benchmark show that by leaning on the LLVM toolchain to perform optimisations, the
-project compiler is able to generate efficient code in-line with other compilers utilising the LLVM
-as a backend. Certain optmisiations such as tail call optimisation can be leveraged `for free'
+Despite primitive nature of the project compiler compared to the other well-established compilers,
+the results of the benchmark show that by leaning on the LLVM toolchain to perform optimisations,
+the project compiler is able to generate efficient code in-line with other compilers utilising the
+LLVM as a backend. Certain optmisiations such as tail call optimisation can be leveraged `for free'
 without the need to implement them in the compiler itself.
 
 \section{Limitations}
