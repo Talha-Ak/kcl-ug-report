@@ -1,1 +1,13 @@
-The abstract is a very brief summary of the report's contents. It should be about half-a-page long. Somebody unfamiliar with your project should have a good idea of what your work is about by reading the abstract alone.
+Functional programming languages are characterised by their focus on functions as first-class
+objects, with programs being constructed by composing functions together. Typical targets for
+compilers, such as the LLVM IR, are designed with imperative languages in mind, and as such, require
+frontends to convert from a functional paradigm to an imperative one.
+
+This project aims to explore the effectiveness of implementing functional language features that
+target the LLVM IR, and how well the LLVM toolchain can optimise and compile these features to
+machine code.
+
+Results show that, after applying the LLVM optimiser to the generated IR, the performance of the
+compiled code is comparable to that of other modern compilers such as Clang. The LLVM toolchain
+provides a powerful backend for functional language compilers, with the ability to optimise the
+generated IR for a variety of target architectures.
