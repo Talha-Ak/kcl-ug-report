@@ -172,7 +172,7 @@ Another recursive function that will be tested is the Fibonacci function, define
 \end{align*}
 \doublespacing
 
-The Fibonacci function is a classic example of a recursive function that, while not as
+The Fibonacci function is another example of a recursive function that, while not as
 computationally intensive as the Ackermann function, is still a good benchmark for evaluating the
 performance of a compiler when generating code for recursive functions.
 
@@ -254,14 +254,14 @@ To ensure a fair comparison, and to evaluate the effect of the LLVM toolchain on
 all compilers were compiled at two optimisation levels: \texttt{-O0} and \texttt{-O3}. The
 \texttt{-O0} flag disables all optimisations, while the \texttt{-O3} flag enables all
 optimisations\footnote{The GHC compiler actually needs two flags to enable all optimisations; one
-for GHC (\texttt{-O2}), and one for the LLVM (\texttt{-optlc-O3}).}.
+for GHC (\texttt{-O2}), and one for the LLVM optimiser (\texttt{-optlo-O3}).}.
 
 Each compiler was benchmarked across both optimisation levels (\texttt{-O0} and \texttt{-O3}). The
 Ackermann function was tested as $ack(3,n)$ with $n$ ranging from 10 to 15 inclusive, while the
 Fibonacci function was tested as $fib(n)$ with $n$ ranging from 40 to 45 inclusive. Each function
 was run ten times for each input value of $n$, and the average time taken was recorded.
 
-Results were obtained on a machine with an Intel Core i7-13620H CPU and 32 GB of RAM, running Ubuntu
+Results were obtained on a machine with an Intel Core i7-13620H CPU and 32 GB of RAM, running Ubuntu
 22.04.4 LTS under WSL2.
 
 \subsection{Results}
@@ -273,29 +273,29 @@ Results were obtained on a machine with an Intel Core i7-13620H CPU and 32 GB o
     \makebox[1.05\textwidth][c]{%
         \begin{minipage}{0.7\textwidth}%
             \begin{tabular}{@{}lcccccccc@{}} \toprule
-                Lang        & \multicolumn{2}{c}{Project} &              & \multicolumn{2}{c}{C} &              & \multicolumn{2}{c}{Haskell}                                  \\
+                Lang        & \multicolumn{2}{c}{Project} &                & \multicolumn{2}{c}{C} &              & \multicolumn{2}{c}{Haskell}                                  \\
                 \cmidrule{2-3} \cmidrule{5-6} \cmidrule{8-9}
-                            & \texttt{-O0}                & \texttt{-O3} &                       & \texttt{-O0} & \texttt{-O3}                &  & \texttt{-O0} & \texttt{-O3} \\ \midrule
-                $ack(3,10)$ & 0.080                       & 0.024        &                       & 0.120        & 0.024                       &  & 1.334        & 0.101        \\
-                $ack(3,11)$ & 0.312                       & 0.093        &                       & 0.490        & 0.092                       &  & 5.449        & 0.387        \\
-                $ack(3,12)$ & 1.267                       & 0.370        &                       & 1.976        & 0.366                       &  & 22.63        & 1.578        \\
-                $ack(3,13)$ & 5.071                       & 1.502        &                       & 8.088        & 1.495                       &  & 99.05        & 6.540        \\
-                $ack(3,14)$ & 20.75                       & 6.193        &                       & 32.90        & 6.130                       &  & 475.3        & 28.08        \\
-                $ack(3,15)$ & --                          & 24.74        &                       & --           & 23.26                       &  & 2237         & 127.1        \\
+                            & \texttt{-O0}                & \texttt{-O3}   &                       & \texttt{-O0} & \texttt{-O3}                &  & \texttt{-O0} & \texttt{-O3} \\ \midrule
+                $ack(3,10)$ & 0.080                       & \textbf{0.024} &                       & 0.120        & \textbf{0.024}              &  & 1.334        & 0.101        \\
+                $ack(3,11)$ & 0.312                       & 0.093          &                       & 0.490        & \textbf{0.092}              &  & 5.449        & 0.387        \\
+                $ack(3,12)$ & 1.267                       & 0.370          &                       & 1.976        & \textbf{0.366}              &  & 22.63        & 1.578        \\
+                $ack(3,13)$ & 5.071                       & 1.502          &                       & 8.088        & \textbf{1.495}              &  & 99.05        & 6.540        \\
+                $ack(3,14)$ & 20.75                       & 6.193          &                       & 32.90        & \textbf{6.130}              &  & 475.3        & 28.08        \\
+                $ack(3,15)$ & --                          & 24.74          &                       & --           & \textbf{23.26}              &  & 2237         & 127.1        \\
                 \bottomrule
             \end{tabular}%
         \end{minipage}%
         \begin{minipage}{0.7\textwidth}%
             \begin{tabular}{@{}lcccccccc@{}} \toprule
-                Lang      & \multicolumn{2}{c}{Project} &              & \multicolumn{2}{c}{C} &              & \multicolumn{2}{c}{Haskell}                                  \\
+                Lang      & \multicolumn{2}{c}{Project} &                & \multicolumn{2}{c}{C} &              & \multicolumn{2}{c}{Haskell}                                  \\
                 \cmidrule{2-3} \cmidrule{5-6} \cmidrule{8-9}
-                          & \texttt{-O0}                & \texttt{-O3} &                       & \texttt{-O0} & \texttt{-O3}                &  & \texttt{-O0} & \texttt{-O3} \\ \midrule
-                $fib(40)$ & 0.713                       & 0.207        &                       & 0.428        & 0.206                       &  & 3.724        & 0.367        \\
-                $fib(41)$ & 1.152                       & 0.333        &                       & 0.705        & 0.335                       &  & 15.18        & 0.593        \\
-                $fib(42)$ & 1.867                       & 0.535        &                       & 1.112        & 0.532                       &  & 24.55        & 0.953        \\
-                $fib(43)$ & 3.019                       & 0.860        &                       & 1.804        & 0.874                       &  & 39.58        & 1.534        \\
-                $fib(44)$ & 4.870                       & 1.389        &                       & 2.925        & 1.388                       &  & 64.31        & 2.486        \\
-                $fib(45)$ & 7.878                       & 2.250        &                       & 4.767        & 2.262                       &  & 104.2        & 4.044        \\
+                          & \texttt{-O0}                & \texttt{-O3}   &                       & \texttt{-O0} & \texttt{-O3}                &  & \texttt{-O0} & \texttt{-O3} \\ \midrule
+                $fib(40)$ & 0.713                       & 0.207          &                       & 0.428        & \textbf{0.206}              &  & 3.724        & 0.367        \\
+                $fib(41)$ & 1.152                       & \textbf{0.333} &                       & 0.705        & 0.335                       &  & 15.18        & 0.593        \\
+                $fib(42)$ & 1.867                       & 0.535          &                       & 1.112        & \textbf{0.532}              &  & 24.55        & 0.953        \\
+                $fib(43)$ & 3.019                       & \textbf{0.860} &                       & 1.804        & 0.874                       &  & 39.58        & 1.534        \\
+                $fib(44)$ & 4.870                       & 1.389          &                       & 2.925        & \textbf{1.388}              &  & 64.31        & 2.486        \\
+                $fib(45)$ & 7.878                       & \textbf{2.250} &                       & 4.767        & 2.262                       &  & 104.2        & 4.044        \\
                 \bottomrule
             \end{tabular}%
         \end{minipage}%
@@ -389,7 +389,7 @@ but at different rates. Haskell sees the most significant improvement, with both
 Fibonacci functions being computed in a fraction of the time compared to \texttt{-O0}. The project
 compiler and Clang also see modest improvements, where they now both perform almost identically for
 all inputs. Haskell, however, still performs significantly worse than the other two compilers, as
-the GHC compiler appears to struggle optmising for this particular function.
+the GHC compiler appears to particularly struggle optimising for the Ackermann function.
 
 The generated LLVM IR code for the project compiler and Clang are now very similar, with both
 utilising tail call optimisation to reduce the number of recursive calls inside the Ackermann
@@ -401,7 +401,7 @@ able to leverage the LLVM's optimisation passes to generate efficient code.
 Despite primitive nature of the project compiler compared to the other well-established compilers,
 the results of the benchmark show that by leaning on the LLVM toolchain to perform optimisations,
 the project compiler is able to generate efficient code in-line with other compilers utilising the
-LLVM as a backend. Certain optmisiations such as tail call optimisation can be leveraged `for free'
+LLVM as a backend. Certain optimisations such as tail call optimisation can be leveraged `for free'
 without the need to implement them in the compiler itself.
 
 \section{Limitations}
@@ -446,9 +446,9 @@ The base type, \texttt{Foo}, would contain an integer `tag' to indicate which va
 type it is, and an array of bytes to store the data associated with the variant. The
 \texttt{Foo_Bar} and \texttt{Foo_Baz} types represent the exact layout of the data for each variant.
 Creating a variant of type \texttt{Foo} would require allocating memory for the base type, setting
-the tag to the appropriate value for the variant, bitcasting the memory address to the appropriate
+the tag to the appropriate value for the variant, bit casting the memory address to the appropriate
 variant type, and then storing the data in the appropriate field. Likewise, extracting the data from
-a value of type \texttt{Foo} would require branching on the tag, bitcasting the value to the
+a value of type \texttt{Foo} would require branching on the tag, bit casting the value to the
 appropriate variant type depending on the tag, and then extracting the data from the appropriate
 fields.
 

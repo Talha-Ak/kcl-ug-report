@@ -18,14 +18,14 @@ of features, such as higher-order functions, pattern matching, and algebraic dat
 \autocite{hudak1989conception}. Typical imperative constructs such as loops and mutable variables
 are also discouraged, instead favouring recursion and immutable data structures. These
 characteristics make compilers for functional languages an interesting case study, as more work is
-offloaded to the compiler for transforming programs into efficient imperative machine code---code
+offloaded to the compiler for transforming programs into efficient imperative machine code -- code
 that is in a different paradigm to that of a functional language.
 
 One method of compiling functional languages is via the LLVM toolchain, which provides a collection
 of utilities for compiling, optimising, and linking programs. For language designers, one can create
-a frontend that compiles a language into LLVM IR, which can then be compiled into machine code for a
-variety of architectures by leveraging the LLVM backend. This approach can be preferable in
-comparison to:
+a frontend that compiles a language into the LLVM Intermediate Representation (IR), which can then
+be compiled into machine code for a variety of architectures by leveraging the LLVM backend. This
+approach can be preferable in comparison to:
 
 \begin{itemize}
     \item \textbf{Compiling to native machine code:} While theoretically the most efficient method
@@ -50,12 +50,11 @@ them, and can be tailored to the target architecture.
 
 \section{Aims}
 
-This project aims to implement a compiler for a small functional language, targeting the LLVM
-Intermediate Representation (IR). This language (inspired by the language presented in the KCL
-module 6CCS3CFL) will support a number of features, including higher order functions and pattern
-matching. The project seeks to evaluate the effectiveness of the LLVM toolchain as a backend for a
-functional language compiler, and to explore the challenges of compiling functional languages to
-imperative machine code.
+This project aims to implement a compiler for a small functional language, targeting the LLVM IR.
+This language (inspired by the language presented in the KCL module 6CCS3CFL) will support a number
+of features, including higher order functions and pattern matching. The project seeks to evaluate
+the effectiveness of the LLVM toolchain as a backend for a functional language compiler, and to
+explore the challenges of compiling functional languages to imperative machine code.
 
 \section{Report Structure}
 

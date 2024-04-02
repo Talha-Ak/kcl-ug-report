@@ -11,7 +11,7 @@ implementation in order to be explained effectively.
 \section{Parsing}
 
 As the library used for parsing, \emph{FastParse}, is a parser combinator library, the parser is
-able to closely reflect the formal grammer designed, with each non-terminal symbol being implemented
+able to closely reflect the formal grammar designed, with each non-terminal symbol being implemented
 as a function that returns a parser. The parser output is mapped to an abstract syntax tree (AST),
 represented by Scala case classes.
 
@@ -661,7 +661,7 @@ contains free variable \texttt{x}. A series of recursive functions are used to a
 \end{code}
 
 Once the free variables have been identified, the environment is created to store these
-variables. A fresh global name is alloceted to it to avoid any naming collisions.
+variables. A fresh global name is allocated to it to avoid any naming collisions.
 Included in the environment is a pointer to the function, allowing the function to be passed around
 as a first-class object:
 \mintinline{scala}{BarEnv = [Ptr, Int]}.
