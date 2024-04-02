@@ -63,6 +63,8 @@
 				\includegraphics[scale=0.4]{FrontMatter/logo.png}\\*
 			\end{flushright}
 			\vspace*{2.2in}
+			{\Large \bf{6CCS3PRJ Final Year}}\\*
+			\vspace*{0.1in}
 			{\huge \bf{\@title}}\\*
 			\vspace*{0.4in}
 			\Large{Final Project Report}\\*
