@@ -810,8 +810,8 @@ LLVM IR, after closure conversion:
     define i32 @main () {
         %add = call %env_bar* @foo(i32 9)
         %tmp_0 = getelementptr %env_bar, %env_bar* %add, i32 0, i32 0
-        %tmp_1 = load i32 (%env_bar*, i32)*, i32 (%env_bar*, i32)** %tmp_1
-        %tmp_2 = call i32 %tmp_2(%env_bar* %add, i32 10)
+        %tmp_1 = load i32 (%env_bar*, i32)*, i32 (%env_bar*, i32)** %tmp_0
+        %tmp_2 = call i32 %tmp_1(%env_bar* %add, i32 10)
         call void @print_i32(i32 %tmp_2)
         ret i32 0
     }
