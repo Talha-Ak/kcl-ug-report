@@ -130,13 +130,26 @@ reuse of the frontend when targeting different platforms.
 
 \section{LLVM IR}
 
+\begin{figure}[b]
+    \centering
+    \includegraphics[width=\textwidth]{Graphics/llvm}
+    \caption{Integrating the LLVM into a compiler pipeline.}
+    \label{fig:llvm}
+\end{figure}
+
 The LLVM project is an open-source collection of tools and libraries for the construction of
 compilers and related programming tools, the core of which revolves around the LLVM intermediate
 representation (LLVM IR). This IR is low-level enough to be used as a target for compilers from
 which an LLVM backend can generate machine code, while also being high-level enough to be used as a
 portable assembly language targeting a variety of architectures. While originally designed as a
-target for compiling C and C++ programs, LLVM has since been used as a backend for a variety of
+target for compiling C and C++ programs, the LLVM has since been used as a backend for a variety of
 languages, including Rust, Swift, and Haskell.
+
+As seen in Figure~\ref{fig:llvm}, targeting the LLVM IR in a compiler pipeline allows for the
+compiler to take advantage of the LLVM optimiser, which is capable of performing a variety of
+optimisations such as constant propagation, dead code elimination, and loop optimisations. No extra
+work is required to target different architectures, as the LLVM backend is capable of generating
+machine code for a variety of platforms, including x86, ARM, and even the web via WebAssembly.
 
 From its inception, the IR was designed to be represented in Static Single Assignment (SSA) form
 \autocite{lattner2004llvm}, restricting the IR such that each variable must be assigned to exactly

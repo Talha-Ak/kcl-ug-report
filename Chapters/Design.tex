@@ -128,6 +128,12 @@ ANF code:
     a + b
 \end{code}
 
+Both of these IR forms have historically been implemented in the Glasgow Haskell Compiler's (GHC).
+The initial implementation of an intermediate representation made use of CPS
+conversion~\autocite{ghccps}, but later switched to a direct, functional IR, akin to
+ANF~\autocite{ghcanf}. The motivation for migrating IR forms was in part due the ease of reasoning
+about programs and compiler optimisations~\autocite{maurer2017compiling}.
+
 For the project, the resulting AST from the parser will be transformed into an intermediate
 representation (IR), based on ANF. An ANF IR was selected over a CPS IR due to its ease in
 converting to the eventual LLVM IR.

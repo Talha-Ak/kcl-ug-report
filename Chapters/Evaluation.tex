@@ -7,6 +7,9 @@ utilising the LLVM as a backend. A quantitative analysis will be discussed first
 analysis on the limitations of the compiler as implemented, and potential improvements that could be
 made.
 
+For the purpose of transparency, the CPS implementation in this project made use of (and
+appropriately transformed) approximately 70 lines of code found in the KCL module 6CCS3CFL.
+
 \section{Software Testing}
 
 To ensure the correctness of the compiler, as well as ensuring the requirements set out in
@@ -483,8 +486,8 @@ explicit type annotations.
 The project compiler does not support heap-allocated variables. All variables are stack-allocated,
 and are deallocated when they go out of scope. This can be problematic for programs that require
 variables to persist beyond the scope in which they were defined, such as returning a struct from a
-function. Additionally, the implementation of data structures based on lists (e.g. Strings) is
-limited without heap-allocated variables, as the size of the list must be known at compile time.
+function. Additionally, the implementation of data structures based on lists is limited without
+heap-allocated variables, as the size of the list must be known at compile time.
 
 \begin{tcolorbox}
     \begin{minted}{scala}
@@ -502,9 +505,13 @@ limited without heap-allocated variables, as the size of the list must be known 
     the pair returned in \texttt{make\_pair} is deallocated when it returns and falls out of scope.
 \end{tcolorbox}
 
+A method to bypass this limitation is to allocate stack memory for the variable in the parent scope,
+and add a parameter passing the pointer to the child scope. However, adding a parameter for every
+variable that needs to persist beyond the scope in which it was defined can quickly become
+cumbersome, and can lead to code that is difficult to read and maintain.
+
 Adding support for heap-allocated variables would require a refactor of the code generation phase.
 The phase would need to be modified to allocate and deallocate memory on the heap, ensuring that
 memory is not leaked or accessed after it has been deallocated (dangling pointers). Without
 providing explicit functions for memory management like \texttt{malloc} and \texttt{free} to the
 end-user, this would need be implemented in the form of a garbage collector.
-
