@@ -13,5 +13,4 @@
 
 _minted-report
 
-*.pdf
 !Graphics/*.pdf
